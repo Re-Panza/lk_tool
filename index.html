@@ -177,14 +177,32 @@
 </div>
 <script>
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').then(reg => {
-        console.log('App pronta per l\'installazione!');
-      }).catch(err => {
-        console.log('Errore registrazione PWA:', err);
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      
+      // Controlla aggiornamenti ogni volta che la pagina torna visibile (es. riapri l'app)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          reg.update();
+          console.log('Controllo aggiornamenti in corso...');
+        }
       });
-    });
+
+      // Se trova un nuovo Service Worker, ricarica la pagina per applicarlo
+      reg.onupdatefound = () => {
+        const newWorker = reg.installing;
+        newWorker.onstatechange = () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('Nuova versione trovata! Ricarico...');
+            window.location.reload();
+          }
+        };
+      };
+
+    }).catch(err => console.log('Errore PWA:', err));
+  });
   }
 </script>
 </body>
+
 </html>
