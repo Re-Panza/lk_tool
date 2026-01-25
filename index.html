@@ -176,33 +176,26 @@
     </footer>
 </div>
 <script>
-  if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').then(reg => {
-      
-      // Controlla aggiornamenti ogni volta che la pagina torna visibile (es. riapri l'app)
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          reg.update();
-          console.log('Controllo aggiornamenti in corso...');
-        }
-      });
+      // Forza il controllo aggiornamenti ogni volta che si riapre l'app
+      reg.update();
 
-      // Se trova un nuovo Service Worker, ricarica la pagina per applicarlo
       reg.onupdatefound = () => {
         const newWorker = reg.installing;
         newWorker.onstatechange = () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('Nuova versione trovata! Ricarico...');
+            // Avvisa l'utente o ricarica la pagina per applicare le modifiche
             window.location.reload();
           }
         };
       };
-
-    }).catch(err => console.log('Errore PWA:', err));
+    });
   });
-  }
+}
 </script>
 </body>
 
 </html>
+
