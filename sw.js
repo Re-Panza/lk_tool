@@ -1,31 +1,33 @@
-const CACHE_NAME = 'lk-tools-v1';
-// Elenca qui i file che vuoi che l'app ricordi sempre
+const CACHE_NAME = 'lk-tools-v1.1'; // <-- CAMBIA QUESTO NUMERO quando fai modifiche
 const urlsToCache = [
   'index.html',
   'manifest.json',
-  'icona.png',
-  // Se le altre pagine sono nello stesso dominio, aggiungile qui sotto:
-  // 'calcolo-partenze/index.html',
-  // 'calcola_argento/index.html'
+  'icona.png'
 ];
 
-// Installazione: salva i file nella cache
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
+  self.skipWaiting(); // Forza l'aggiornamento immediato
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName); // Cancella la vecchia cache
+          }
+        })
+      );
+    })
   );
 });
 
-// Gestione richieste: se sei offline, usa la cache
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Se trova il file in cache lo restituisce, altrimenti lo scarica dalla rete
-        return response || fetch(event.request);
-      })
+    caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
