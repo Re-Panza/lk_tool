@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lk-tools-v1.1'; // <-- CAMBIA QUESTO NUMERO quando fai modifiche
+const CACHE_NAME = 'lk-tools-v1.2'; // <-- CAMBIA QUESTO NUMERO quando fai modifiche
 const urlsToCache = [
   'index.html',
   'manifest.json',
@@ -31,3 +31,4 @@ self.addEventListener('fetch', event => {
     caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
+
