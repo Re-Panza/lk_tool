@@ -1,5 +1,5 @@
 // 1. CAMBIA QUESTO NUMERO (es. v1.4, v1.5...) OGNI VOLTA CHE MODIFICHI IL SITO
-const CACHE_NAME = 'lk-tools-universal-v1.3';
+const CACHE_NAME = 'lk-tools-universal-v1.4';
 
 // 2. Installazione: forza l'attivazione immediata
 self.addEventListener('install', event => {
@@ -42,3 +42,4 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
