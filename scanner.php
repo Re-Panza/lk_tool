@@ -21,7 +21,26 @@ $centerY = 16375;
 $raggioMax = 250; 
 $contatoreVuoti = 0;
 $limiteVuoti = 10; // Alzato a 10 per essere più sicuri durante i caricamenti lenti
+echo "--- TEST DI CONNESSIONE ---\n";
+$puntiTest = [
+    [16383, 16375], // La tua Piazzaforte
+    [16250, 16250], // Dove avevi trovato dati prima
+    [16500, 16500], // Altra zona
+    [500, 500]      // Centro vecchio
+];
 
+foreach ($puntiTest as $pt) {
+    echo "Provando zona {$pt[0]},{$pt[1]}... ";
+    // Usiamo una variabile temporanea per non sporcare la mappa principale durante il test
+    $testMap = [];
+    if (processTile($pt[0], $pt[1], $serverID, $testMap)) {
+        echo " [OK] TROVATI CASTELLI QUI!\n";
+    } else {
+        echo " [VUOTO]\n";
+    }
+}
+echo "---------------------------\n\n";
+// --- FINE TEST ---
 echo "Inizio scansione... (Dati in memoria: " . count($tempMap) . ")\n";
 
 for ($r = 0; $r <= $raggioMax; $r++) {
