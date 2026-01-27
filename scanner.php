@@ -16,8 +16,8 @@ if (file_exists($fileDatabase)) {
     }
 }
 
-$centerX = 500;
-$centerY = 500;
+$centerX = 16380;
+$centerY = 16375;
 $raggioMax = 250; 
 $contatoreVuoti = 0;
 $limiteVuoti = 10; // Alzato a 10 per essere più sicuri durante i caricamenti lenti
