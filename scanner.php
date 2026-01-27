@@ -1,15 +1,29 @@
 <?php
 $serverID = "LKWorldServer-RE-IT-6";
 $fileDatabase = 'mondo327.json';
-$database = [];
+
+// --- MODIFICA 1: CARICAMENTO DATI ESISTENTI ---
+if (file_exists($fileDatabase)) {
+    $currentData = json_decode(file_get_contents($fileDatabase), true);
+} else {
+    $currentData = [];
+}
+
+// Creiamo una mappa temporanea usando le coordinate come chiave per evitare duplicati
+$tempMap = [];
+foreach ($currentData as $entry) {
+    $key = $entry['x'] . "_" . $entry['y'];
+    $tempMap[$key] = $entry;
+}
+// ----------------------------------------------
 
 $centerX = 500;
 $centerY = 500;
 $raggioMax = 250; 
 $contatoreVuoti = 0;
-$limiteVuoti = 5; // Si ferma dopo 5 giri consecutivi senza castelli
+$limiteVuoti = 5; 
 
-echo "Inizio scansione intelligente (Tolleranza: $limiteVuoti giri vuoti)...\n";
+echo "Inizio scansione incrementale (Dati pre-esistenti: " . count($tempMap) . ")...\n";
 
 for ($r = 0; $r <= $raggioMax; $r++) {
     $trovatoInQuestoGiro = false;
@@ -19,33 +33,33 @@ for ($r = 0; $r <= $raggioMax; $r++) {
     $yMin = $centerY - $r;
     $yMax = $centerY + $r;
 
-    // Scansione dei bordi del quadrato
     for ($i = $xMin; $i <= $xMax; $i++) {
         foreach ([$yMin, $yMax] as $j) {
-            if (processTile($i, $j, $serverID, $database)) $trovatoInQuestoGiro = true;
+            if (processTile($i, $j, $serverID, $tempMap)) $trovatoInQuestoGiro = true;
         }
     }
     for ($j = $yMin + 1; $j < $yMax; $j++) {
         foreach ([$xMin, $xMax] as $i) {
-            if (processTile($i, $j, $serverID, $database)) $trovatoInQuestoGiro = true;
+            if (processTile($i, $j, $serverID, $tempMap)) $trovatoInQuestoGiro = true;
         }
     }
 
     if ($trovatoInQuestoGiro) {
-        echo "Raggio $r: Trovati castelli. (Totale: " . count($database) . ")\n";
-        $contatoreVuoti = 0; // Reset del contatore se troviamo qualcosa
+        echo "Raggio $r: Trovati castelli. (Database totale: " . count($tempMap) . ")\n";
+        $contatoreVuoti = 0;
     } else {
         $contatoreVuoti++;
         echo "Raggio $r: Vuoto ($contatoreVuoti/$limiteVuoti)\n";
     }
 
     if ($contatoreVuoti >= $limiteVuoti) {
-        echo "Raggiunto limite di giri vuoti. Fine scansione per confine mappa.\n";
+        echo "Raggiunto limite di giri vuoti. Fine scansione.\n";
         break;
     }
 }
 
-function processTile($x, $y, $serverID, &$database) {
+// --- MODIFICA 2: AGGIORNATA FUNZIONE PROCESS ---
+function processTile($x, $y, $serverID, &$tempMap) {
     $url = "http://backend3.lordsandknights.com/maps/{$serverID}/{$x}_{$y}.jtile";
     $content = @file_get_contents($url);
     $found = false;
@@ -54,11 +68,14 @@ function processTile($x, $y, $serverID, &$database) {
         $json = json_decode($matches[1], true);
         if (isset($json['habitatArray']) && count($json['habitatArray']) > 0) {
             foreach ($json['habitatArray'] as $h) {
-                $database[] = [
+                $key = $h['mapx'] . "_" . $h['mapy'];
+                // Aggiorna o aggiunge il castello
+                $tempMap[$key] = [
                     'p' => $h['playerid'],
                     'n' => $h['name'],
                     'x' => $h['mapx'],
-                    'y' => $h['mapy']
+                    'y' => $h['mapy'],
+                    't' => $h['type'] // AGGIUNTO IL TIPO (Città, Castello, Fortezza)
                 ];
             }
             $found = true;
@@ -67,5 +84,7 @@ function processTile($x, $y, $serverID, &$database) {
     return $found;
 }
 
-file_put_contents($fileDatabase, json_encode($database));
-echo "Database salvato correttamente.\n";
+// --- MODIFICA 3: SALVATAGGIO FINALE ---
+$finalDatabase = array_values($tempMap); // Trasforma la mappa in lista semplice
+file_put_contents($fileDatabase, json_encode($finalDatabase));
+echo "Database salvato correttamente. Totale: " . count($finalDatabase) . " castelli.\n";
