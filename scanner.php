@@ -88,14 +88,13 @@ function processTile($x, $y, $serverID, &$tempMap) {
         if (isset($json['habitatArray']) && count($json['habitatArray']) > 0) {
             foreach ($json['habitatArray'] as $h) {
                 $key = $h['mapx'] . "_" . $h['mapy'];
-                $tempMap[$key] = [
-                    'p' => (int)$h['playerid'],
-                    'n' => $h['name'],
-                    'x' => (int)$h['mapx'],
-                    'y' => (int)$h['mapy'],
-                    't' => (int)$h['type'],
-                    'd' => time() // Timestamp per la pulizia
-                ];
+               $tempMap[$key] = [
+    'p' => (int)$h['playerid'],
+    'n' => isset($h['name']) ? $h['name'] : "", // Mantiene il nome se esiste
+    'x' => (int)$h['mapx'],
+    'y' => (int)$h['mapy'],
+    'd' => time()
+];
             }
             $found = true;
         }
