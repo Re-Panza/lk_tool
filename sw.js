@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3.8';
+const CACHE_VERSION = 'v3.9';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const PAGES_CACHE = `pages-${CACHE_VERSION}`;
 
@@ -46,3 +46,4 @@ self.addEventListener('fetch', event => {
     );
   }
 });
+
