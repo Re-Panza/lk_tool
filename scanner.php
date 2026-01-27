@@ -2,28 +2,27 @@
 $serverID = "LKWorldServer-RE-IT-6";
 $fileDatabase = 'mondo327.json';
 
-// --- MODIFICA 1: CARICAMENTO DATI ESISTENTI ---
-if (file_exists($fileDatabase)) {
-    $currentData = json_decode(file_get_contents($fileDatabase), true);
-} else {
-    $currentData = [];
-}
-
-// Creiamo una mappa temporanea usando le coordinate come chiave per evitare duplicati
+// --- 1. CARICAMENTO DATI ESISTENTI ---
 $tempMap = [];
-foreach ($currentData as $entry) {
-    $key = $entry['x'] . "_" . $entry['y'];
-    $tempMap[$key] = $entry;
+if (file_exists($fileDatabase)) {
+    $content = file_get_contents($fileDatabase);
+    $currentData = json_decode($content, true);
+    if (is_array($currentData)) {
+        foreach ($currentData as $entry) {
+            // Usiamo le coordinate come chiave per evitare duplicati
+            $key = $entry['x'] . "_" . $entry['y'];
+            $tempMap[$key] = $entry;
+        }
+    }
 }
-// ----------------------------------------------
 
 $centerX = 500;
 $centerY = 500;
 $raggioMax = 250; 
 $contatoreVuoti = 0;
-$limiteVuoti = 5; 
+$limiteVuoti = 10; // Alzato a 10 per essere più sicuri durante i caricamenti lenti
 
-echo "Inizio scansione incrementale (Dati pre-esistenti: " . count($tempMap) . ")...\n";
+echo "Inizio scansione... (Dati in memoria: " . count($tempMap) . ")\n";
 
 for ($r = 0; $r <= $raggioMax; $r++) {
     $trovatoInQuestoGiro = false;
@@ -33,11 +32,13 @@ for ($r = 0; $r <= $raggioMax; $r++) {
     $yMin = $centerY - $r;
     $yMax = $centerY + $r;
 
+    // Ciclo X
     for ($i = $xMin; $i <= $xMax; $i++) {
         foreach ([$yMin, $yMax] as $j) {
             if (processTile($i, $j, $serverID, $tempMap)) $trovatoInQuestoGiro = true;
         }
     }
+    // Ciclo Y
     for ($j = $yMin + 1; $j < $yMax; $j++) {
         foreach ([$xMin, $xMax] as $i) {
             if (processTile($i, $j, $serverID, $tempMap)) $trovatoInQuestoGiro = true;
@@ -45,20 +46,38 @@ for ($r = 0; $r <= $raggioMax; $r++) {
     }
 
     if ($trovatoInQuestoGiro) {
-        echo "Raggio $r: Trovati castelli. (Database totale: " . count($tempMap) . ")\n";
+        echo "Raggio $r: TROVATO! (Totale database: " . count($tempMap) . ")\n";
         $contatoreVuoti = 0;
     } else {
         $contatoreVuoti++;
-        echo "Raggio $r: Vuoto ($contatoreVuoti/$limiteVuoti)\n";
+        echo "Raggio $r: vuoto ($contatoreVuoti/$limiteVuoti)\n";
     }
 
     if ($contatoreVuoti >= $limiteVuoti) {
-        echo "Raggiunto limite di giri vuoti. Fine scansione.\n";
+        echo "Fine mappa raggiunta.\n";
         break;
     }
 }
 
-// --- MODIFICA 2: AGGIORNATA FUNZIONE PROCESS ---
+// --- 2. PULIZIA DATI VECCHI (72 ORE) ---
+$limiteTempo = time() - (72 * 3600);
+$mappaPulita = [];
+foreach ($tempMap as $entry) {
+    // Teniamo il dato se è stato visto nelle ultime 72 ore o se non ha ancora il timestamp
+    if (!isset($entry['d']) || $entry['d'] > $limiteTempo) {
+        $mappaPulita[] = $entry;
+    }
+}
+
+// --- 3. SALVATAGGIO SICURO ---
+if (count($mappaPulita) > 0) {
+    file_put_contents($fileDatabase, json_encode($mappaPulita));
+    echo "SCANSIONE COMPLETATA. Salva: " . count($mappaPulita) . " castelli.\n";
+} else {
+    echo "ERRORE: Nessun dato trovato. File non sovrascritto per sicurezza.\n";
+}
+
+// --- FUNZIONE DI PROCESSO ---
 function processTile($x, $y, $serverID, &$tempMap) {
     $url = "http://backend3.lordsandknights.com/maps/{$serverID}/{$x}_{$y}.jtile";
     $content = @file_get_contents($url);
@@ -69,36 +88,17 @@ function processTile($x, $y, $serverID, &$tempMap) {
         if (isset($json['habitatArray']) && count($json['habitatArray']) > 0) {
             foreach ($json['habitatArray'] as $h) {
                 $key = $h['mapx'] . "_" . $h['mapy'];
-                // Aggiorna o aggiunge il castello
-               $tempMap[$key] = [
-    'p' => $h['playerid'],
-    'n' => $h['name'],
-    'x' => $h['mapx'],
-    'y' => $h['mapy'],
-    't' => $h['type'],
-    'd' => time() // Registra il momento esatto in cui lo scanner lo vede
-];
+                $tempMap[$key] = [
+                    'p' => (int)$h['playerid'],
+                    'n' => $h['name'],
+                    'x' => (int)$h['mapx'],
+                    'y' => (int)$h['mapy'],
+                    't' => (int)$h['type'],
+                    'd' => time() // Timestamp per la pulizia
+                ];
             }
             $found = true;
         }
     }
     return $found;
 }
-
-// --- MODIFICA 3: SALVATAGGIO FINALE ---
-$finalDatabase = array_values($tempMap); // Trasforma la mappa in lista semplice
-// --- PULIZIA AUTOMATICA (72 ore) ---
-$limiteTempo = time() - (72 * 3600); // 72 ore fa
-$mappaPulita = [];
-
-foreach ($tempMap as $key => $entry) {
-    // Se il castello ha una data ed è più recente di 72 ore, lo teniamo.
-    // Se non ha data (dati vecchi), al primo giro lo teniamo ma gli diamo tempo.
-    if (!isset($entry['d']) || $entry['d'] > $limiteTempo) {
-        $mappaPulita[] = $entry;
-    }
-}
-
-$finalDatabase = $mappaPulita;
-// ----------------------------------
-echo "Database salvato correttamente. Totale: " . count($finalDatabase) . " castelli.\n";
