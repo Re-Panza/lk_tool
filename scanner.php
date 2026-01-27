@@ -70,13 +70,14 @@ function processTile($x, $y, $serverID, &$tempMap) {
             foreach ($json['habitatArray'] as $h) {
                 $key = $h['mapx'] . "_" . $h['mapy'];
                 // Aggiorna o aggiunge il castello
-                $tempMap[$key] = [
-                    'p' => $h['playerid'],
-                    'n' => $h['name'],
-                    'x' => $h['mapx'],
-                    'y' => $h['mapy'],
-                    't' => $h['type'] // AGGIUNTO IL TIPO (Città, Castello, Fortezza)
-                ];
+               $tempMap[$key] = [
+    'p' => $h['playerid'],
+    'n' => $h['name'],
+    'x' => $h['mapx'],
+    'y' => $h['mapy'],
+    't' => $h['type'],
+    'd' => time() // Registra il momento esatto in cui lo scanner lo vede
+];
             }
             $found = true;
         }
@@ -86,5 +87,18 @@ function processTile($x, $y, $serverID, &$tempMap) {
 
 // --- MODIFICA 3: SALVATAGGIO FINALE ---
 $finalDatabase = array_values($tempMap); // Trasforma la mappa in lista semplice
-file_put_contents($fileDatabase, json_encode($finalDatabase));
+// --- PULIZIA AUTOMATICA (72 ore) ---
+$limiteTempo = time() - (72 * 3600); // 72 ore fa
+$mappaPulita = [];
+
+foreach ($tempMap as $key => $entry) {
+    // Se il castello ha una data ed è più recente di 72 ore, lo teniamo.
+    // Se non ha data (dati vecchi), al primo giro lo teniamo ma gli diamo tempo.
+    if (!isset($entry['d']) || $entry['d'] > $limiteTempo) {
+        $mappaPulita[] = $entry;
+    }
+}
+
+$finalDatabase = $mappaPulita;
+// ----------------------------------
 echo "Database salvato correttamente. Totale: " . count($finalDatabase) . " castelli.\n";
