@@ -2,8 +2,8 @@ name: Scanner L&K Automatico
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Si avvia da solo ogni notte a mezzanotte
-  workflow_dispatch:   # Ti permette di avviarlo tu a mano quando vuoi
+    - cron: '0 */2 * * *' # Si avvia ogni 2 ore esatte (00:00, 02:00, 04:00, ecc.)
+  workflow_dispatch:      # Ti permette sempre di avviarlo a mano se serve
 
 jobs:
   build:
