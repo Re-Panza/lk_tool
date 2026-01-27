@@ -1,5 +1,5 @@
 <?php
-$serverID = "LKWorldServer-RE-IT-6";
+$serverID = "world-it-re-6";
 $fileDatabase = 'mondo327.json';
 
 // --- 1. CARICAMENTO DATI ESISTENTI ---
@@ -99,21 +99,29 @@ if (count($mappaPulita) > 0) {
 // --- FUNZIONE DI PROCESSO ---
 function processTile($x, $y, $serverID, &$tempMap) {
     $url = "http://backend3.lordsandknights.com/maps/{$serverID}/{$x}_{$y}.jtile";
-    $content = @file_get_contents($url);
-    $found = false;
+    
+    // Test di connessione grezzo
+    $headers = @get_headers($url);
+    if($headers && strpos($headers[0], '200') === false) {
+        echo " Errore Server: " . $headers[0] . " su coordinata $x,$y \n";
+        return false;
+    }
 
-    if ($content && preg_match('/\((.*)\)/s', $content, $matches)) {
+    $content = @file_get_contents($url);
+    if (!$content) return false;
+
+    $found = false;
+    if (preg_match('/\((.*)\)/s', $content, $matches)) {
         $json = json_decode($matches[1], true);
         if (isset($json['habitatArray']) && count($json['habitatArray']) > 0) {
             foreach ($json['habitatArray'] as $h) {
                 $key = $h['mapx'] . "_" . $h['mapy'];
-                // Mettiamo solo i dati base che siamo certi esistano
                 $tempMap[$key] = [
                     'p' => (int)$h['playerid'],
-                    'n' => isset($h['name']) ? $h['name'] : "",
+                    'n' => $h['name'],
                     'x' => (int)$h['mapx'],
                     'y' => (int)$h['mapy'],
-                    'd' => time() // Ci serve per la pulizia automatica
+                    'd' => time()
                 ];
             }
             $found = true;
