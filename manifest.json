@@ -2,6 +2,7 @@
   "name": "L&K Tools Hub",
   "short_name": "L&K Tools",
   "start_url": "index.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#60a5fa",
