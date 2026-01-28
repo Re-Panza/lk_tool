@@ -91,21 +91,15 @@ function processTile($x, $y, $serverID, &$tempMap) {
             foreach ($json['habitatArray'] as $h) {
                 $key = $h['mapx'] . "_" . $h['mapy'];
                 
-                // Definiamo il tipo di habitat in base a habitattype
-                // 1 = Castello, 2 = Fortezza, 3 = Città (solitamente)
-                $tipoMappa = "Castello";
-                if ($h['habitattype'] == 2) $tipoMappa = "Fortezza";
-                if ($h['habitattype'] == 4) $tipoMappa = "Città";
-
                 $tempMap[$key] = [
-                    'p' => (int)$h['playerid'],   // ID Giocatore
-                    'a' => (int)$h['allianceid'], // ID Alleanza
-                    'n' => isset($h['name']) ? $h['name'] : "", // Nome Castello
-                    'x' => (int)$h['mapx'],       // Coordinata X
-                    'y' => (int)$h['mapy'],       // Coordinata Y
-                    'pt' => (int)$h['points'],    // Punti Castello (NEW!)
-                    't' => $tipoMappa,            // Tipo tradotto (NEW!)
-                    'd' => time()                 // Timestamp
+    'p' => (int)$h['playerid'],
+    'a' => (int)$h['allianceid'],
+    'n' => isset($h['name']) ? $h['name'] : "",
+    'x' => (int)$h['mapx'],
+    'y' => (int)$h['mapy'],
+    'pt' => (int)$h['points'],
+    't' => (int)$h['habitattype'], // Salviamo direttamente il numero
+    'd' => time()
                 ];
             }
             $found = true;
