@@ -71,7 +71,8 @@ foreach ($tempMap as $entry) {
 
 // --- 3. SALVATAGGIO SICURO ---
 if (count($mappaPulita) > 0) {
-    file_put_contents($fileDatabase, json_encode($mappaPulita, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    // Il flag JSON_UNESCAPED_UNICODE è fondamentale per le emoji
+file_put_contents($fileDatabase, json_encode(array_values($tempMap), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     echo "SCANSIONE COMPLETATA. Salva: " . count($mappaPulita) . " castelli.\n";
 } else {
     echo "ERRORE: Nessun dato trovato. File non sovrascritto per sicurezza.\n";
@@ -98,7 +99,7 @@ function processTile($x, $y, $serverID, &$tempMap) {
 
                 $tempMap[$key] = [
                     'p' => (int)$h['playerid'],   // ID Giocatore
-                    'pn' => isset($h['playername']) ? $h['playername'] : "Sconosciuto",
+                    'pn' => isset($h['playername']) ? (string)$h['playername'] : "Sconosciuto",
                     'a' => (int)$h['allianceid'], // ID Alleanza
                     'n' => isset($h['name']) ? $h['name'] : "", // Nome Castello
                     'x' => (int)$h['mapx'],       // Coordinata X
