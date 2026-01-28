@@ -43,7 +43,7 @@
     }
 
     header { margin-bottom: 40px; }
-    h1 { font-size: 32px; margin: 0; letter-spacing: -1px; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    h1 { font-size: 32px; margin: 0; letter-spacing: -1px; background: linear-gradient(to right, #fff, var(--accent)); -webkit-background-clip: text; -webkit-fill-color: transparent; -webkit-text-fill-color: transparent; }
     p { color: var(--muted); margin-top: 8px; font-size: 16px; }
 
     .grid { display: flex; flex-direction: column; gap: 20px; }
@@ -105,22 +105,12 @@
         transition: 0.3s;
         box-shadow: 0 4px 15px rgba(0, 112, 186, 0.3);
     }
-    .paypal-link:hover { 
-        background: #005ea6; 
-        transform: scale(1.05);
-        box-shadow: 0 6px 20px rgba(0, 112, 186, 0.5);
-    }
     
     body {
         -webkit-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
-    }
-
-    textarea, input {
-        -webkit-user-select: text;
-        user-select: text;
     }
 
     .tool-card:active, .paypal-link:active {
@@ -192,5 +182,3 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
-
-
