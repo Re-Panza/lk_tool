@@ -10,7 +10,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta charset="utf-8" />
-  <title>L&K Tools Hub | Longo11</title>
+  <title>L&K Tools Hub | Re Panza</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -30,10 +30,10 @@
                   var(--bg);
       color: var(--text);
       display: flex;
-      align-items: flex-start; /* Permette lo scroll corretto su mobile */
+      align-items: flex-start;
       justify-content: center;
       min-height: 100vh;
-      padding: 40px 20px; /* Più spazio in alto */
+      padding: 40px 20px;
     }
 
     .container {
@@ -110,34 +110,23 @@
         transform: scale(1.05);
         box-shadow: 0 6px 20px rgba(0, 112, 186, 0.5);
     }
-    /* --- OTTIMIZZAZIONE APP MOBILE --- */
+    
     body {
-        /* Impedisce la selezione del testo (evita che l'app sembri un sito web) */
         -webkit-user-select: none;
         user-select: none;
-        /* Rimuove l'alone grigio quando clicchi sui tasti su iPhone */
         -webkit-tap-highlight-color: transparent;
-        /* Rende lo scorrimento più fluido */
         touch-action: manipulation;
     }
 
-    /* Permette la selezione solo dentro i campi di testo (textarea o input) */
     textarea, input {
         -webkit-user-select: text;
         user-select: text;
     }
 
-    /* Rende i tuoi banner/bottoni più grandi e facili da premere */
-    .banner, .card, button {
-        cursor: pointer;
-        transition: transform 0.1s active;
+    .tool-card:active, .paypal-link:active {
+        transform: scale(0.96);
+        background: rgba(96, 165, 250, 0.2);
     }
-
-    /* Effetto "pressione" quando tocchi un bottone */
-    .tool-card:active, .paypal-link:active, button:active {
-    transform: scale(0.96);
-    background: rgba(96, 165, 250, 0.2);
-}
   </style>
 </head>
 <body>
@@ -149,6 +138,14 @@
     </header>
 
     <div class="grid">
+        <a href="https://re-panza.github.io/lk_tool/ricerca_giocatore/" class="tool-card">
+            <div class="icon-box">🔍</div>
+            <div class="tool-info">
+                <b>Ricerca Giocatore</b>
+                <span>Trova tutti i castelli di un giocatore incollando il suo profilo.</span>
+            </div>
+        </a>
+
         <a href="https://re-panza.github.io/calcolo-partenze/" class="tool-card">
             <div class="icon-box">🎯</div>
             <div class="tool-info">
@@ -175,18 +172,16 @@
         </a>
     </footer>
 </div>
+
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').then(reg => {
-      // Forza il controllo aggiornamenti ogni volta che si riapre l'app
       reg.update();
-
       reg.onupdatefound = () => {
         const newWorker = reg.installing;
         newWorker.onstatechange = () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // Avvisa l'utente o ricarica la pagina per applicare le modifiche
             window.location.reload();
           }
         };
@@ -196,6 +191,4 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-
 </html>
-
