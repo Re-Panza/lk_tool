@@ -46,7 +46,7 @@ for ($r = 0; $r <= $raggioMax; $r++) {
     }
 
     if ($trovatoInQuestoGiro) {
-        echo "Raggio $r: TROVATO! (Totale database: " . count($tempMap) . ")\n";
+        echo "Raggio $r: TROVATO! (Totale : " . count($tempMap) . ")\n";
         $contatoreVuoti = 0;
     } else {
         $contatoreVuoti++;
@@ -71,7 +71,7 @@ foreach ($tempMap as $entry) {
 
 // --- 3. SALVATAGGIO SICURO ---
 if (count($mappaPulita) > 0) {
-    file_put_contents($fileDatabase, json_encode($mappaPulita));
+    file_put_contents($fileDatabase, json_encode($mappaPulita, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     echo "SCANSIONE COMPLETATA. Salva: " . count($mappaPulita) . " castelli.\n";
 } else {
     echo "ERRORE: Nessun dato trovato. File non sovrascritto per sicurezza.\n";
