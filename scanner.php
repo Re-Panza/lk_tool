@@ -92,14 +92,14 @@ function processTile($x, $y, $serverID, &$tempMap) {
                 $key = $h['mapx'] . "_" . $h['mapy'];
                 
                 $tempMap[$key] = [
-    'p' => (int)$h['playerid'],
-    'a' => (int)$h['allianceid'],
-    'n' => isset($h['name']) ? $h['name'] : "",
-    'x' => (int)$h['mapx'],
-    'y' => (int)$h['mapy'],
-    'pt' => (int)$h['points'],
-    't' => (int)$h['habitattype'], // Salviamo direttamente il numero
-    'd' => time()
+                    'p'  => (int)$h['playerid'],   // ID Giocatore
+                    'a'  => (int)$h['allianceid'], // ID Alleanza
+                    'n'  => isset($h['name']) ? $h['name'] : "", // Nome
+                    'x'  => (int)$h['mapx'],       // X
+                    'y'  => (int)$h['mapy'],       // Y
+                    'pt' => (int)$h['points'],     // Punti
+                    't'  => (int)$h['habitattype'], // SALVIAMO IL NUMERO (0, 2, 4...)
+                    'd'  => time()                 // Timestamp
                 ];
             }
             $found = true;
