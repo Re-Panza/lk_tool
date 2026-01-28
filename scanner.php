@@ -98,6 +98,7 @@ function processTile($x, $y, $serverID, &$tempMap) {
 
                 $tempMap[$key] = [
                     'p' => (int)$h['playerid'],   // ID Giocatore
+                    'pn' => isset($h['playername']) ? $h['playername'] : "Sconosciuto",
                     'a' => (int)$h['allianceid'], // ID Alleanza
                     'n' => isset($h['name']) ? $h['name'] : "", // Nome Castello
                     'x' => (int)$h['mapx'],       // Coordinata X
