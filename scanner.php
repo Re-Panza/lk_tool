@@ -95,11 +95,10 @@ function processTile($x, $y, $serverID, &$tempMap) {
                 // 1 = Castello, 2 = Fortezza, 3 = Città (solitamente)
                 $tipoMappa = "Castello";
                 if ($h['habitattype'] == 2) $tipoMappa = "Fortezza";
-                if ($h['habitattype'] == 0) $tipoMappa = "Città";
+                if ($h['habitattype'] == 4) $tipoMappa = "Città";
 
                 $tempMap[$key] = [
                     'p' => (int)$h['playerid'],   // ID Giocatore
-                    'pn' => isset($h['playername']) ? (string)$h['playername'] : "Sconosciuto",
                     'a' => (int)$h['allianceid'], // ID Alleanza
                     'n' => isset($h['name']) ? $h['name'] : "", // Nome Castello
                     'x' => (int)$h['mapx'],       // Coordinata X
