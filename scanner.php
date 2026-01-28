@@ -78,6 +78,7 @@ if (count($mappaPulita) > 0) {
 }
 
 // --- FUNZIONE DI PROCESSO ---
+// --- FUNZIONE DI PROCESSO AGGIORNATA ---
 function processTile($x, $y, $serverID, &$tempMap) {
     $url = "http://backend3.lordsandknights.com/maps/{$serverID}/{$x}_{$y}.jtile";
     $content = @file_get_contents($url);
@@ -88,13 +89,23 @@ function processTile($x, $y, $serverID, &$tempMap) {
         if (isset($json['habitatArray']) && count($json['habitatArray']) > 0) {
             foreach ($json['habitatArray'] as $h) {
                 $key = $h['mapx'] . "_" . $h['mapy'];
-               $tempMap[$key] = [
-    'p' => (int)$h['playerid'],
-    'n' => isset($h['name']) ? $h['name'] : "", // Mantiene il nome se esiste
-    'x' => (int)$h['mapx'],
-    'y' => (int)$h['mapy'],
-    'd' => time()
-];
+                
+                // Definiamo il tipo di habitat in base a habitattype
+                // 1 = Castello, 2 = Fortezza, 3 = Città (solitamente)
+                $tipoMappa = "Castello";
+                if ($h['habitattype'] == 2) $tipoMappa = "Fortezza";
+                if ($h['habitattype'] == 3) $tipoMappa = "Città";
+
+                $tempMap[$key] = [
+                    'p' => (int)$h['playerid'],   // ID Giocatore
+                    'a' => (int)$h['allianceid'], // ID Alleanza
+                    'n' => isset($h['name']) ? $h['name'] : "", // Nome Castello
+                    'x' => (int)$h['mapx'],       // Coordinata X
+                    'y' => (int)$h['mapy'],       // Coordinata Y
+                    'pt' => (int)$h['points'],    // Punti Castello (NEW!)
+                    't' => $tipoMappa,            // Tipo tradotto (NEW!)
+                    'd' => time()                 // Timestamp
+                ];
             }
             $found = true;
         }
