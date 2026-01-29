@@ -1,7 +1,7 @@
 <?php
 $serverID = "LKWorldServer-RE-IT-6";
 $fileDatabase = 'mondo327.json';
-
+$backendURL = "http://backend3.lordsandknights.com";
 
 // --- 1. CARICAMENTO DATI E "MEMORIA" ---
 $tempMap = [];
