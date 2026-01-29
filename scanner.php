@@ -2,108 +2,124 @@
 $serverID = "LKWorldServer-RE-IT-6";
 $fileDatabase = 'mondo327.json';
 
-// --- 1. CARICAMENTO DATI ESISTENTI ---
+
+// --- 1. CARICAMENTO DATI E "MEMORIA" ---
 $tempMap = [];
+$puntiCaldi = []; // Qui salviamo i file .jtile che sappiamo essere popolati
+
 if (file_exists($fileDatabase)) {
     $content = file_get_contents($fileDatabase);
     $currentData = json_decode($content, true);
     if (is_array($currentData)) {
         foreach ($currentData as $entry) {
-            // Usiamo le coordinate come chiave per evitare duplicati
             $key = $entry['x'] . "_" . $entry['y'];
             $tempMap[$key] = $entry;
+            
+            // Calcoliamo la coordinata del file jtile (che nel tuo mondo è x/y diviso 32 o simile)
+            // Ma dato che usiamo direttamente le coordinate jtile dal log, salviamo quelle.
+            // Se nel log vedi 503_503.jtile, salviamo 503 e 503.
+            $jtileX = floor($entry['x'] / 32); // Calcolo standard per trasformare coord gioco in jtile
+            $jtileY = floor($entry['y'] / 32);
+            $puntiCaldi[$jtileX . "_" . $jtileY] = ['x' => $jtileX, 'y' => $jtileY];
         }
     }
 }
 
-$centerX = 500;
-$centerY = 500;
-$raggioMax = 250; 
-$contatoreVuoti = 0;
-$limiteVuoti = 10; // Alzato a 10 per essere più sicuri durante i caricamenti lenti
+echo "Dati caricati. Analisi di " . count($puntiCaldi) . " quadranti conosciuti...\n";
 
-echo "Inizio scansione... (Dati in memoria: " . count($tempMap) . ")\n";
+// --- 2. FASE 1: CONTROLLO IMMEDIATO ZONE POPOLATE ---
+foreach ($puntiCaldi as $zona) {
+    processTile($zona['x'], $zona['y'], $serverID, $tempMap, $backendURL);
+}
+
+// --- 3. FASE 2: ESPANSIONE (CERCA NUOVI GIOCATORI) ---
+// Troviamo il centro attuale dei giocatori per non ripartire da 500|500 se non serve
+$centerX = 503; $centerY = 503;
+if (count($tempMap) > 0) {
+    $sumX = 0; $sumY = 0;
+    foreach ($tempMap as $h) { $sumX += floor($h['x']/32); $sumY += floor($h['y']/32); }
+    $centerX = round($sumX / count($tempMap));
+    $centerY = round($sumY / count($tempMap));
+}
+
+$raggioMax = 150; 
+$limiteVuoti = 10; 
+$contatoreVuoti = 0;
+
+echo "Inizio espansione dal centro: $centerX | $centerY\n";
 
 for ($r = 0; $r <= $raggioMax; $r++) {
-    $trovatoInQuestoGiro = false;
-    
-    $xMin = $centerX - $r;
-    $xMax = $centerX + $r;
-    $yMin = $centerY - $r;
-    $yMax = $centerY + $r;
+    $trovatoNuovo = false;
+    $xMin = $centerX - $r; $xMax = $centerX + $r;
+    $yMin = $centerY - $r; $yMax = $centerY + $r;
 
-    // Ciclo X
-    for ($i = $xMin; $i <= $xMax; $i++) {
-        foreach ([$yMin, $yMax] as $j) {
-            if (processTile($i, $j, $serverID, $tempMap)) $trovatoInQuestoGiro = true;
-        }
-    }
-    // Ciclo Y
-    for ($j = $yMin + 1; $j < $yMax; $j++) {
-        foreach ([$xMin, $xMax] as $i) {
-            if (processTile($i, $j, $serverID, $tempMap)) $trovatoInQuestoGiro = true;
+    // Scansione perimetrale
+    $puntiDaControllare = [];
+    for ($i = $xMin; $i <= $xMax; $i++) { $puntiDaControllare[] = [$i, $yMin]; $puntiDaControllare[] = [$i, $yMax]; }
+    for ($j = $yMin + 1; $j < $yMax; $j++) { $puntiDaControllare[] = [$xMin, $j]; $puntiDaControllare[] = [$xMax, $j]; }
+
+    foreach ($puntiDaControllare as $p) {
+        // Se abbiamo già scansionato questa zona nella Fase 1, saltiamo per risparmiare tempo
+        if (isset($puntiCaldi[$p[0] . "_" . $p[1]])) continue;
+        
+        if (processTile($p[0], $p[1], $serverID, $tempMap, $backendURL)) {
+            $trovatoNuovo = true;
         }
     }
 
-    if ($trovatoInQuestoGiro) {
-        echo "Raggio $r: TROVATO! (Totale : " . count($tempMap) . ")\n";
+    if ($trovatoNuovo) {
         $contatoreVuoti = 0;
+        echo "Raggio $r: Nuovi habitat trovati!\n";
     } else {
         $contatoreVuoti++;
-        echo "Raggio $r: vuoto ($contatoreVuoti/$limiteVuoti)\n";
+        if ($r % 5 == 0) echo "Raggio $r: nessun nuovo insediamento ($contatoreVuoti/$limiteVuoti)\n";
     }
 
     if ($contatoreVuoti >= $limiteVuoti) {
-        echo "Fine mappa raggiunta.\n";
+        echo "Espansione terminata: confine mappa raggiunto.\n";
         break;
     }
 }
 
-// --- 2. PULIZIA DATI VECCHI (72 ORE) ---
+// --- 4. PULIZIA (72h) E SALVATAGGIO ---
 $limiteTempo = time() - (72 * 3600);
-$mappaPulita = [];
-foreach ($tempMap as $entry) {
-    // Teniamo il dato se è stato visto nelle ultime 72 ore o se non ha ancora il timestamp
-    if (!isset($entry['d']) || $entry['d'] > $limiteTempo) {
-        $mappaPulita[] = $entry;
-    }
-}
+$mappaPulita = array_filter($tempMap, function($entry) use ($limiteTempo) {
+    return !isset($entry['d']) || $entry['d'] > $limiteTempo;
+});
 
-// --- 3. SALVATAGGIO SICURO ---
-if (count($mappaPulita) > 0) {
-    // Il flag JSON_UNESCAPED_UNICODE è fondamentale per le emoji
-file_put_contents($fileDatabase, json_encode(array_values($tempMap), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    echo "SCANSIONE COMPLETATA. Salva: " . count($mappaPulita) . " castelli.\n";
-} else {
-    echo "ERRORE: Nessun dato trovato. File non sovrascritto per sicurezza.\n";
-}
+file_put_contents($fileDatabase, json_encode(array_values($mappaPulita), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+echo "Fine. Database aggiornato con " . count($mappaPulita) . " habitat.\n";
 
-// --- FUNZIONE DI PROCESSO ---
-// --- FUNZIONE DI PROCESSO AGGIORNATA ---
-function processTile($x, $y, $serverID, &$tempMap) {
-    $url = "http://backend3.lordsandknights.com/maps/{$serverID}/{$x}_{$y}.jtile";
+// --- FUNZIONE CORE ---
+function processTile($x, $y, $serverID, &$tempMap, $backend) {
+    $url = "{$backend}/maps/{$serverID}/{$x}_{$y}.jtile";
     $content = @file_get_contents($url);
-    $found = false;
+    
+    // 1. SCORCIATOIA: Se il file è vuoto o è la risposta standard vuota, esci subito
+    if (!$content || $content === 'callback_politicalmap({})') {
+        return false; 
+    }
 
-    if ($content && preg_match('/\((.*)\)/s', $content, $matches)) {
+    // 2. Se c'è contenuto, lo elaboriamo con la Regex
+    if (preg_match('/\((.*)\)/s', $content, $matches)) {
         $json = json_decode($matches[1], true);
+        
         if (isset($json['habitatArray']) && count($json['habitatArray']) > 0) {
             foreach ($json['habitatArray'] as $h) {
                 $key = $h['mapx'] . "_" . $h['mapy'];
-                
                 $tempMap[$key] = [
-                    'p'  => (int)$h['playerid'],   // ID Giocatore
-                    'a'  => (int)$h['allianceid'], // ID Alleanza
-                    'n'  => isset($h['name']) ? $h['name'] : "", // Nome
-                    'x'  => (int)$h['mapx'],       // X
-                    'y'  => (int)$h['mapy'],       // Y
-                    'pt' => (int)$h['points'],     // Punti
-                    't'  => (int)$h['habitattype'], // SALVIAMO IL NUMERO (0, 2, 4...)
-                    'd'  => time()                 // Timestamp
+                    'p'  => (int)$h['playerid'],
+                    'a'  => (int)$h['allianceid'],
+                    'n'  => $h['name'] ?? "",
+                    'x'  => (int)$h['mapx'],
+                    'y'  => (int)$h['mapy'],
+                    'pt' => (int)$h['points'],
+                    't'  => (int)$h['habitattype'],
+                    'd'  => time()
                 ];
             }
-            $found = true;
+            return true;
         }
     }
-    return $found;
+    return false;
 }
