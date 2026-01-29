@@ -12,6 +12,48 @@
   <meta charset="utf-8" />
   <title>L&K Tools Hub | Re Panza</title>
   <style>
+    #ai-assistant-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; font-family: sans-serif; }
+#ai-button { 
+    width: 70px; /* Un po' più grande per l'immagine */
+    height: 70px; 
+    border-radius: 50%; 
+    background: var(--accent); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4); 
+    overflow: hidden; /* Taglia l'immagine se esce dal cerchio */
+    border: 2px solid var(--accent);
+}
+
+#ai-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Adatta bene l'omino al cerchio */
+}
+#ai-window { 
+    display: none; 
+    position: absolute; 
+    bottom: 85px; 
+    right: 0; 
+    width: 85vw; 
+    max-width: 320px; 
+    background: var(--card); 
+    border: 1px solid var(--accent); 
+    border-radius: 20px; 
+    padding: 15px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6); 
+    backdrop-filter: blur(10px);
+}
+.ai-header { color: var(--accent); font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+#ai-content { max-height: 300px; overflow-y: auto; margin-bottom: 10px; }
+.ai-msg { font-size: 13px; color: var(--text); margin-bottom: 10px; line-height: 1.4; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; }
+.ai-option { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 6px 10px; border-radius: 20px; margin-bottom: 6px; cursor: pointer; font-size: 11px; display: inline-block; margin-right: 5px; transition: 0.2s; }
+.ai-option:hover { background: var(--accent); color: #000; }
+.ai-input-area { display: flex; gap: 5px; border-top: 1px solid var(--border); padding-top: 10px; }
+#ai-input-text { flex: 1; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 5px; padding: 5px; font-size: 12px; }
+#ai-send-btn { background: var(--accent); border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
     :root {
       --bg: #0f172a;
       --card: #111c33;
@@ -179,6 +221,83 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+function toggleAI() {
+    const win = document.getElementById('ai-window');
+    win.style.display = win.style.display === 'block' ? 'none' : 'block';
+    if (win.style.display === 'block' && window.innerWidth < 768) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function resetAI() {
+    document.getElementById('ai-content').innerHTML = `
+        <p class="ai-msg">👑 Ciao! Sono Re Panza. Come posso aiutarti oggi a dominare il server?</p>
+        <div class="ai-option" onclick="aiAnswer(1)">🔍 Ricerca Giocatore</div>
+        <div class="ai-option" onclick="aiAnswer(5)">🎯 Calcolo Partenze</div>
+        <div class="ai-option" onclick="aiAnswer(6)">💰 Calcolo Argento</div>
+        <div class="ai-option" onclick="aiAnswer(4)">🛠️ Parla con me (@giolong)</div>
+    `;
+}
+
+function aiAnswer(choice) {
+    const content = document.getElementById('ai-content');
+    let ans = "";
+    if (choice === 1) ans = "Usa 'Ricerca Giocatore' per spiare i nemici! Incolla il profilo copiato dal gioco e ti mostrerò tutti i suoi castelli e città.";
+    if (choice === 5) ans = "Il tool 'Partenze' serve per sincronizzare gli attacchi. Ti dirò io il secondo esatto in cui cliccare 'Invia'!";
+    if (choice === 6) ans = "Il 'Calcolo Argento' ti dice quanto argento inviare per conquistare un target senza sprecare risorse.";
+    if (choice === 4) ans = "Hai bisogno di aiuto diretto? Clicca qui: <a href='https://t.me/giolong' target='_blank' style='color:var(--accent); font-weight:bold;'>Apri Telegram</a>";
+
+    addAiMsg(ans);
+    content.innerHTML += `<div class="ai-option" onclick="resetAI()" style="margin-top:10px; opacity:0.7;">⬅️ Indietro</div>`;
+}
+
+function addAiMsg(text) {
+    const content = document.getElementById('ai-content');
+    content.innerHTML += `<p class="ai-msg">👑 ${text}</p>`;
+    content.scrollTop = content.scrollHeight;
+}
+
+function aiFreeText() {
+    const input = document.getElementById('ai-input-text');
+    const txt = input.value.toLowerCase();
+    if (txt.trim() === "") return;
+    document.getElementById('ai-content').innerHTML += `<p class="ai-msg" style="background:var(--accent); color:#000; text-align:right;">${input.value}</p>`;
+    
+    setTimeout(() => {
+        if (txt.includes("argento")) addAiMsg("Il calcolo argento è il terzo bottone nella home!");
+        else if (txt.includes("partenza") || txt.includes("attacco")) addAiMsg("Usa il tool Partenze per coordinare i tuoi attacchi al secondo!");
+        else if (txt.includes("ricerca") || txt.includes("trova")) addAiMsg("Il tool Ricerca Giocatore serve per trovare le coordinate dei nemici.");
+        else if (txt.includes("ciao")) addAiMsg("Ciao guerriero! Pronto per la conquista?");
+        else addAiMsg("Non ho capito bene... prova a scrivermi su Telegram @giolong!");
+    }, 600);
+    input.value = "";
+}
+
+// Permette di inviare premendo INVIO sulla tastiera
+document.getElementById('ai-input-text')?.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") aiFreeText();
+});
 </script>
+<div id="ai-assistant-container">
+    <div id="ai-window">
+        <div class="ai-header">
+            <span>👑 Assistente Re Panza</span>
+            <span onclick="toggleAI()" style="cursor:pointer">×</span>
+        </div>
+        <div id="ai-content">
+            <p class="ai-msg">Ciao! Sono Re Panza. Come posso aiutarti oggi nella tua conquista?</p>
+            <div class="ai-option" onclick="aiAnswer(1)">❓ Come si usa?</div>
+            <div class="ai-option" onclick="aiAnswer(2)">❌ Errore Rosso</div>
+            <div class="ai-option" onclick="aiAnswer(4)">🛠️ Parla con me</div>
+        </div>
+        <div class="ai-input-area">
+            <input type="text" id="ai-input-text" placeholder="Scrivi al Re...">
+            <button id="ai-send-btn" onclick="aiFreeText()">Invia</button>
+        </div>
+    </div>
+    <div id="ai-button" onclick="toggleAI()">
+        <img src="re-panza-ai.png" alt="Re Panza AI">
+    </div>
+</div>
 </body>
 </html>
