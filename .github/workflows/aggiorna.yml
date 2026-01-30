@@ -28,7 +28,6 @@ jobs:
           git commit -m "Update database castelli $(date)" || echo "Niente da aggiornare"
           git push
 
-      # --- LOGICA OPZIONE B: INVIO DATI A REPO INATTIVI ---
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -38,19 +37,20 @@ jobs:
         env:
           MY_PAT: ${{ secrets.PAT_GITHUB }}
         run: |
-          # 1. Clonazione della repo dove sta l'HTML degli inattivi
-          # CAMBIA 'TUO-USERNAME' e 'NOME-REPO-INATTIVI' con quelli veri
+          # Pulisce eventuali residui per evitare errori nel clone
+          rm -rf target_repo
+          
+          # Clonazione della repo destinazione
           git clone https://$MY_PAT@github.com/Re-Panza/player_inattivi.git target_repo
           
-          # 2. Copia il file generato (mondo327.json) rinominandolo come serve allo script
+          # Copia il file generato
           cp mondo327.json target_repo/data_327.json
           
-          # 3. Entra nella cartella, esegui lo script e pulisci
+          # Entra nella cartella ed esegui l'aggiornamento
           cd target_repo
           node update_history.js
-          rm data_327.json
           
-          # 4. Commit e Push sulla Repo Inattivi
+          # Commit e Push sulla Repo Inattivi
           git config --global user.name "Re Panza Bot"
           git config --global user.email "bot@repanza.it"
           git add db_storico.json
