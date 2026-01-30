@@ -27,3 +27,26 @@ jobs:
           git add mondo327.json
           git commit -m "Update database castelli $(date)" || exit 0
           git push
+steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Esegui la tua Scansione attuale
+        run: # Qui c'è il comando che già usi per lo scanner
+
+      # --- AGGIUNTA CHIRURGICA ---
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Aggiorna Database Storico
+        run: node update_history.js
+
+      - name: Commit e Push dei dati (Unico per entrambi)
+        run: |
+          git config --global user.name "Re Panza Bot"
+          git config --global user.email "bot@repanza.it"
+          git add data_327.json db_storico.json
+          git commit -m "Aggiornamento Scansione + Storico Inattività" || echo "Niente da aggiornare"
+          git push
