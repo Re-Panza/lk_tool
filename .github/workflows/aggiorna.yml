@@ -1,9 +1,9 @@
-name: Scanner L&K Automatico
+name: Scanner L&K Automatico con Storico
 
 on:
   schedule:
-    - cron: '0 */2 * * *' # Si avvia ogni 2 ore esatte (00:00, 02:00, 04:00, ecc.)
-  workflow_dispatch:      # Ti permette sempre di avviarlo a mano se serve
+    - cron: '0 */2 * * *' # Gira ogni 2 ore
+  workflow_dispatch:      # Avvio manuale
 
 jobs:
   build:
@@ -18,35 +18,41 @@ jobs:
           php-version: '8.1'
 
       - name: Esegui lo script di scansione
-        run: php scanner.php
+        run: php scanner.php # Genera il file mondo327.json
 
-      - name: Salva i risultati nel repository
+      - name: Salva i risultati nella Repo Home
         run: |
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "action@github.com"
           git add mondo327.json
-          git commit -m "Update database castelli $(date)" || exit 0
+          git commit -m "Update database castelli $(date)" || echo "Niente da aggiornare"
           git push
-steps:
-      - name: Checkout
-        uses: actions/checkout@v3
 
-      - name: Esegui la tua Scansione attuale
-        run: # Qui c'è il comando che già usi per lo scanner
-
-      # --- AGGIUNTA CHIRURGICA ---
+      # --- LOGICA OPZIONE B: INVIO DATI A REPO INATTIVI ---
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
 
-      - name: Aggiorna Database Storico
-        run: node update_history.js
-
-      - name: Commit e Push dei dati (Unico per entrambi)
+      - name: Sincronizzazione Storico Inattivi
+        env:
+          MY_PAT: ${{ secrets.PAT_GITHUB }}
         run: |
+          # 1. Clonazione della repo dove sta l'HTML degli inattivi
+          # CAMBIA 'TUO-USERNAME' e 'NOME-REPO-INATTIVI' con quelli veri
+          git clone https://$MY_PAT@github.com/TUO-USERNAME/NOME-REPO-INATTIVI.git target_repo
+          
+          # 2. Copia il file generato (mondo327.json) rinominandolo come serve allo script
+          cp mondo327.json target_repo/data_327.json
+          
+          # 3. Entra nella cartella, esegui lo script e pulisci
+          cd target_repo
+          node update_history.js
+          rm data_327.json
+          
+          # 4. Commit e Push sulla Repo Inattivi
           git config --global user.name "Re Panza Bot"
           git config --global user.email "bot@repanza.it"
-          git add data_327.json db_storico.json
-          git commit -m "Aggiornamento Scansione + Storico Inattività" || echo "Niente da aggiornare"
+          git add db_storico.json
+          git commit -m "🤖 Update storico inattività: $(date)" || echo "Nessun inattivo nuovo"
           git push
