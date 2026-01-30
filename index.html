@@ -128,10 +128,10 @@
         <div id="ai-content">
             <p>Ciao! Sono Re Panza. Chiedimi pure consiglio per la tua conquista.</p>
         </div>
-        <div class="ai-input-area">
-            <input type="text" id="ai-input" placeholder="Scrivi al Re...">
-            <button id="ai-send-btn" onclick="chiediAlRe()">Invia</button>
-        </div>
+       <div class="ai-input-area">
+    <input type="text" id="ai-input" placeholder="Scrivi al Re...">
+    <button id="ai-send-btn" onclick="chiediAlRe()">Invia</button>
+</div>
     </div>
     <div id="ai-button" onclick="toggleAI()">
         <img src="re-panza-ai.png" alt="Re Panza AI">
@@ -141,22 +141,19 @@
 <script src="https://re-panza.github.io/re-panza-core/re_panza_brain.js"></script>
 
 <script>
-// Gestione Service Worker
+// 2. Gestione Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').then(reg => {
-      reg.update();
-    });
+    navigator.serviceWorker.register('sw.js');
   });
 }
 
-// FIX PER IL TASTO INVIO: Questo permette di inviare i messaggi premendo il tasto "Invio" sulla tastiera
+// 3. FIX TASTO INVIO: Questo permette di inviare premendo "Enter"
 document.addEventListener('keypress', function (e) {
     const inputField = document.getElementById('ai-input');
+    // Se l'utente preme Invio mentre è nel campo di testo, clicca "Invia" per lui
     if (e.key === 'Enter' && document.activeElement === inputField) {
         chiediAlRe();
     }
 });
 </script>
-</body>
-</html>
