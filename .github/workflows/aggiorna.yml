@@ -1,15 +1,18 @@
-name: Scanner L&K Automatico con Storico
+name: Scanner L&K Automatico con Storico Integrato
 
 on:
   schedule:
-    - cron: '0 */2 * * *' # Gira ogni 2 ore
-  workflow_dispatch:      # Avvio manuale
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
     steps:
-      - name: Accedi al repository principale
+      - name: Accedi al repository
         uses: actions/checkout@v3
 
       - name: Configura PHP
@@ -18,44 +21,31 @@ jobs:
           php-version: '8.1'
 
       - name: Esegui lo script di scansione
-        run: php scanner.php # Genera il file mondo327.json
-
-      - name: Salva i risultati nella Repo Home (lk_tool)
-        run: |
-          git config --global user.name "GitHub Action Bot"
-          git config --global user.email "action@github.com"
-          git add mondo327.json
-          git commit -m "Update database castelli $(date)" || echo "Niente da aggiornare"
-          git push
+        run: php scanner.php # Genera mondo327.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
 
-      - name: Sincronizzazione Storico Inattivi
-        env:
-          MY_PAT: ${{ secrets.RE_PANZA_SYNC }}
+      - name: Aggiorna lo Storico Inattivi
         run: |
-          # 1. Pulizia cartella
-          rm -rf target_repo
+          # 1. Copia il file per lo script
+          cp mondo327.json data_327.json
           
-          # 2. Clonazione usando l'autenticazione persistente
-          # Questo metodo evita l'errore "Authentication failed"
-          git clone https://x-access-token:${MY_PAT}@github.com/Re-Panza/player_inattivi.git target_repo
-          
-          # 3. Spostamento dati
-          cp mondo327.json target_repo/data_327.json
-          
-          # 4. Esecuzione script Node (passando il file come richiesto da update_history.js)
-          cd target_repo
+          # 2. Esegui lo script Node (che ora è nella cartella principale)
           node update_history.js data_327.json
           
-          # 5. Configurazione Git interna alla cartella target
-          git config user.name "Re Panza Bot"
-          git config user.email "bot@repanza.it"
+          # 3. Pulizia file temporaneo
+          rm data_327.json
+
+      - name: Salva tutto (Mondo e Storico)
+        run: |
+          git config --global user.name "Re Panza Bot"
+          git config --global user.email "bot@repanza.it"
           
-          # 6. Push dei risultati (db_327.json è il file creato dallo script)
-          git add db_327.json
-          git commit -m "🤖 Update storico inattività: $(date)" || echo "Nessuna modifica allo storico"
-          git push origin main
+          # Aggiunge i file generati o aggiornati
+          git add mondo327.json db_327.json || echo "Nessun file nuovo"
+          
+          git commit -m "🤖 Update automatico: $(date)" || echo "Niente da aggiornare"
+          git push
