@@ -37,22 +37,25 @@ jobs:
         env:
           MY_PAT: ${{ secrets.PAT_GITHUB }}
         run: |
-          # Pulisce eventuali residui per evitare errori nel clone
+          # 1. Pulizia radicale per evitare che la cartella esistente blocchi il clone
           rm -rf target_repo
           
-          # Clonazione della repo destinazione
-          git clone https://$MY_PAT@github.com/Re-Panza/player_inattivi.git target_repo
+          # 2. Clonazione usando il metodo x-access-token (Risolve Exit Code 1)
+          git clone https://x-access-token:${MY_PAT}@github.com/Re-Panza/player_inattivi.git target_repo
           
-          # Copia il file generato
+          # 3. Copia del database generato nella cartella di destinazione
           cp mondo327.json target_repo/data_327.json
           
-          # Entra nella cartella ed esegui l'aggiornamento
+          # 4. Entra nella cartella, aggiorna lo storico con Node e pulisci il temporaneo
           cd target_repo
           node update_history.js
+          rm data_327.json
           
-          # Commit e Push sulla Repo Inattivi
-          git config --global user.name "Re Panza Bot"
-          git config --global user.email "bot@repanza.it"
+          # 5. Configurazione Git locale per questa operazione
+          git config user.name "Re Panza Bot"
+          git config user.email "bot@repanza.it"
+          
+          # 6. Aggiunta, commit e push dello storico aggiornato
           git add db_storico.json
           git commit -m "🤖 Update storico inattività: $(date)" || echo "Nessun inattivo nuovo"
           git push
