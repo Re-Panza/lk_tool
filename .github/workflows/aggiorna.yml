@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Accedi al repository
+      - name: Accedi al repository principale
         uses: actions/checkout@v3
 
       - name: Configura PHP
@@ -20,7 +20,7 @@ jobs:
       - name: Esegui lo script di scansione
         run: php scanner.php # Genera il file mondo327.json
 
-      - name: Salva i risultati nella Repo Home
+      - name: Salva i risultati nella Repo Home (lk_tool)
         run: |
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "action@github.com"
@@ -37,22 +37,25 @@ jobs:
         env:
           MY_PAT: ${{ secrets.RE_PANZA_SYNC }}
         run: |
-          # 1. Pulizia radicale
+          # 1. Pulizia cartella
           rm -rf target_repo
           
-          # 2. Clonazione usando l'intestazione di autorizzazione (Più sicuro e stabile)
+          # 2. Clonazione usando l'autenticazione persistente
+          # Questo metodo evita l'errore "Authentication failed"
           git clone https://x-access-token:${MY_PAT}@github.com/Re-Panza/player_inattivi.git target_repo
           
-          # 3. Spostamento file e aggiornamento
+          # 3. Spostamento dati
           cp mondo327.json target_repo/data_327.json
+          
+          # 4. Esecuzione script Node (passando il file come richiesto da update_history.js)
           cd target_repo
           node update_history.js data_327.json
           
-          # 4. Configurazione Git locale e Push
+          # 5. Configurazione Git interna alla cartella target
           git config user.name "Re Panza Bot"
           git config user.email "bot@repanza.it"
-          git add db_327.json
-          git commit -m "🤖 Update storico inattività: $(date)" || echo "Nessun cambiamento"
           
-          # 5. Push forzando l'uso del token per l'autenticazione
-          git push https://x-access-token:${MY_PAT}@github.com/Re-Panza/player_inattivi.git HEAD:main
+          # 6. Push dei risultati (db_327.json è il file creato dallo script)
+          git add db_327.json
+          git commit -m "🤖 Update storico inattività: $(date)" || echo "Nessuna modifica allo storico"
+          git push origin main
