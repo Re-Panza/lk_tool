@@ -1,88 +1,87 @@
 const fs = require('fs');
 
 const inputFile = process.argv[2]; 
-if (!inputFile) {
-    console.error("ERRORE: Specifica il file di input (es: mondo327.json)");
-    process.exit(1);
-}
-
-const mondoMatch = inputFile.match(/\d+/);
+const mondoMatch = inputFile ? inputFile.match(/\d+/) : null;
 const mondoNum = mondoMatch ? mondoMatch[0] : 'unknown';
 const FILE_DB = `db_${mondoNum}.json`;
 const FILE_INATTIVI = `inattivi_${mondoNum}.json`;
 
 try {
-    if (!fs.existsSync(inputFile)) {
-        console.error(`ERRORE: Il file ${inputFile} non esiste.`);
-        process.exit(1);
-    }
     const scanData = JSON.parse(fs.readFileSync(inputFile, 'utf8'));
-
     let db = {};
     if (fs.existsSync(FILE_DB)) {
-        try {
-            db = JSON.parse(fs.readFileSync(FILE_DB, 'utf8'));
-        } catch(e) { db = {}; }
+        db = JSON.parse(fs.readFileSync(FILE_DB, 'utf8'));
     }
 
     const now = new Date();
     const currentStatus = {};
 
-    // 1. Raggruppa i dati per ID Giocatore (campo 'p')
+    // 1. Mappiamo i dati attuali usando l'ID giocatore 'p'
     scanData.forEach(h => {
         const pid = h.p; 
         if (!pid || pid === 0) return;
-
-        if (!currentStatus[pid]) {
-            currentStatus[pid] = { id: pid, nome: h.n, castelli: [] };
-        }
-        // Firma basata su Nome (n) e Punti (pt) del castello
-        currentStatus[pid].castelli.push(`${h.n}|${h.pt}`);
+        if (!currentStatus[pid]) currentStatus[pid] = { nome: h.n, castelli: {} };
+        
+        // Usiamo le coordinate x_y come chiave per identificare il singolo castello
+        // Salviamo la firma (nome e punti) di quel castello specifico
+        currentStatus[pid].castelli[`${h.x}_${h.y}`] = `${h.n}|${h.pt}`;
     });
 
-    // 2. Confronto Reattivo
     Object.keys(currentStatus).forEach(pid => {
         const player = currentStatus[pid];
-        const stateString = player.castelli.sort().join(';');
-
+        
         if (!db[pid]) {
             db[pid] = {
                 nome: player.nome,
                 ultima_modifica: now.toISOString(),
                 inattivo: false,
-                stato_precedente: stateString
+                firme_castelli: player.castelli // Salviamo l'elenco delle firme per coordinata
             };
         } else {
-            const lastMod = new Date(db[pid].ultima_modifica);
-            const orePassate = (now - lastMod) / (1000 * 60 * 60);
+            let haCambiatoQualcosa = false;
+            
+            // CONTROLLO ATTIVITÀ: Verifichiamo solo i castelli che il player possiede ANCORA
+            for (const [coord, firmaAttuale] of Object.entries(player.castelli)) {
+                const firmaPrecedente = db[pid].firme_castelli[coord];
+                
+                // Se il castello esisteva già e ha cambiato nome o punti -> ATTIVO
+                if (firmaPrecedente && firmaPrecedente !== firmaAttuale) {
+                    haCambiatoQualcosa = true;
+                    break;
+                }
+                // Se è un castello NUOVO (conquista fatta dal player) -> ATTIVO
+                if (!firmaPrecedente) {
+                    haCambiatoQualcosa = true;
+                    break;
+                }
+            }
 
-            if (db[pid].stato_precedente !== stateString) {
-                // Se c'è una variazione, torna attivo e resetta il timer
+            if (haCambiatoQualcosa) {
                 db[pid].ultima_modifica = now.toISOString();
-                db[pid].stato_precedente = stateString;
                 db[pid].inattivo = false;
+                db[pid].firme_castelli = player.castelli;
                 db[pid].nome = player.nome;
-            } else if (orePassate >= 24) {
-                // Se identico da 24 ore, diventa inattivo
-                db[pid].inattivo = true;
+            } else {
+                // Se non ha fatto conquiste e i suoi castelli rimasti sono identici...
+                const orePassate = (now - new Date(db[pid].ultima_modifica)) / (1000 * 60 * 60);
+                if (orePassate >= 24) db[pid].inattivo = true;
+                
+                // AGGIORNAMENTO SILENZIOSO: Aggiorniamo la lista castelli (se ne ha persi alcuni)
+                // senza resettare il timer di inattività
+                db[pid].firme_castelli = player.castelli;
             }
         }
     });
 
-    // 3. Generazione Lista Inattivi Dinamica
+    // 2. Generazione Lista Inattivi Dinamica
     const listaInattivi = Object.keys(db)
         .filter(pid => db[pid].inattivo === true)
-        .map(pid => ({
-            id: pid,
-            nome: db[pid].nome,
-            ultimo_cambio: db[pid].ultima_modifica
-        }));
+        .map(pid => ({ id: pid, nome: db[pid].nome, dal: db[pid].ultima_modifica }));
 
     fs.writeFileSync(FILE_DB, JSON.stringify(db, null, 2));
     fs.writeFileSync(FILE_INATTIVI, JSON.stringify(listaInattivi, null, 2));
     
-    console.log(`✅ Storico e Lista Inattivi (${listaInattivi.length}) aggiornati.`);
-
+    console.log(`✅ Elaborazione completata. Inattivi: ${listaInattivi.length}`);
 } catch (e) {
-    console.error("❌ Errore:", e.message);
+    console.error("Errore:", e.message);
 }
