@@ -1,73 +1,88 @@
 const fs = require('fs');
 
-// Legge il file passato come argomento (es: node update_history.js data_327.json)
 const inputFile = process.argv[2]; 
-
 if (!inputFile) {
-    console.error("ERRORE: Devi specificare il file di input (es. data_327.json)");
+    console.error("ERRORE: Specifica il file di input (es: mondo327.json)");
     process.exit(1);
 }
 
-// Estrae il numero del mondo (es. 327) dal nome del file per creare il DB corretto
 const mondoMatch = inputFile.match(/\d+/);
-if (!mondoMatch) {
-    console.error("ERRORE: Il nome del file deve contenere il numero del mondo.");
-    process.exit(1);
-}
-const mondoNum = mondoMatch[0];
+const mondoNum = mondoMatch ? mondoMatch[0] : 'unknown';
 const FILE_DB = `db_${mondoNum}.json`;
+const FILE_INATTIVI = `inattivi_${mondoNum}.json`;
 
 try {
-    // 1. Carica i dati appena scansionati
     if (!fs.existsSync(inputFile)) {
         console.error(`ERRORE: Il file ${inputFile} non esiste.`);
         process.exit(1);
     }
     const scanData = JSON.parse(fs.readFileSync(inputFile, 'utf8'));
 
-    // 2. Carica il database storico esistente (o ne crea uno vuoto)
     let db = {};
     if (fs.existsSync(FILE_DB)) {
-        db = JSON.parse(fs.readFileSync(FILE_DB, 'utf8'));
+        try {
+            db = JSON.parse(fs.readFileSync(FILE_DB, 'utf8'));
+        } catch(e) { db = {}; }
     }
 
-    const now = new Date().toISOString();
-    let counter = 0;
+    const now = new Date();
+    const currentStatus = {};
 
-    // 3. Confronta i dati
-    scanData.forEach(p => {
-        const id = p.id;
-        const current = { 
-            pts: p.points || 0, 
-            cst: p.castles ? p.castles.length : 0 
-        };
+    // 1. Raggruppa i dati per ID Giocatore (campo 'p')
+    scanData.forEach(h => {
+        const pid = h.p; 
+        if (!pid || pid === 0) return;
 
-        if (!db[id]) {
-            // Nuovo giocatore mai visto
-            db[id] = { 
-                nome: p.name, 
-                ultima_modifica: now, 
-                dati: current 
+        if (!currentStatus[pid]) {
+            currentStatus[pid] = { id: pid, nome: h.n, castelli: [] };
+        }
+        // Firma basata su Nome (n) e Punti (pt) del castello
+        currentStatus[pid].castelli.push(`${h.n}|${h.pt}`);
+    });
+
+    // 2. Confronto Reattivo
+    Object.keys(currentStatus).forEach(pid => {
+        const player = currentStatus[pid];
+        const stateString = player.castelli.sort().join(';');
+
+        if (!db[pid]) {
+            db[pid] = {
+                nome: player.nome,
+                ultima_modifica: now.toISOString(),
+                inattivo: false,
+                stato_precedente: stateString
             };
-            counter++;
-        } else if (db[id].dati.pts !== current.pts || db[id].dati.cst !== current.cst) {
-            // Giocatore esistente che ha cambiato punteggio o castelli
-            db[id].ultima_modifica = now;
-            db[id].dati = current;
-            db[id].nome = p.name;
-            counter++;
+        } else {
+            const lastMod = new Date(db[pid].ultima_modifica);
+            const orePassate = (now - lastMod) / (1000 * 60 * 60);
+
+            if (db[pid].stato_precedente !== stateString) {
+                // Se c'è una variazione, torna attivo e resetta il timer
+                db[pid].ultima_modifica = now.toISOString();
+                db[pid].stato_precedente = stateString;
+                db[pid].inattivo = false;
+                db[pid].nome = player.nome;
+            } else if (orePassate >= 24) {
+                // Se identico da 24 ore, diventa inattivo
+                db[pid].inattivo = true;
+            }
         }
     });
 
-    // 4. Salva il database aggiornato
+    // 3. Generazione Lista Inattivi Dinamica
+    const listaInattivi = Object.keys(db)
+        .filter(pid => db[pid].inattivo === true)
+        .map(pid => ({
+            id: pid,
+            nome: db[pid].nome,
+            ultimo_cambio: db[pid].ultima_modifica
+        }));
+
     fs.writeFileSync(FILE_DB, JSON.stringify(db, null, 2));
+    fs.writeFileSync(FILE_INATTIVI, JSON.stringify(listaInattivi, null, 2));
     
-    console.log(`✅ Storico aggiornato con successo!`);
-    console.log(`📁 File: ${FILE_DB}`);
-    console.log(`📊 Modifiche rilevate: ${counter}`);
+    console.log(`✅ Storico e Lista Inattivi (${listaInattivi.length}) aggiornati.`);
 
 } catch (e) {
-    console.error("❌ Errore durante l'aggiornamento dello storico:");
-    console.error(e.message);
-    process.exit(1);
+    console.error("❌ Errore:", e.message);
 }
