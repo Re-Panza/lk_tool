@@ -2,7 +2,7 @@ name: Scanner L&K Automatico con Storico Integrato
 
 on:
   schedule:
-    - cron: '0 */2 * * *'
+    - cron: '0 */2 * * *' # Esegue ogni 2 ore
   workflow_dispatch:
 
 jobs:
@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Accedi al repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Configura PHP
         uses: shivammathur/setup-php@v2
@@ -21,31 +23,28 @@ jobs:
           php-version: '8.1'
 
       - name: Esegui lo script di scansione
-        run: php scanner.php # Genera mondo327.json
+        run: php scanner.php
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
 
-      - name: Aggiorna lo Storico Inattivi
+      - name: Aggiorna lo Storico e Inattivi
         run: |
-          # 1. Copia il file per lo script
-          cp mondo327.json data_327.json
+          # Sincronizza i file prima di elaborare
+          git pull origin main || echo "Nessun aggiornamento remoto"
           
-          # 2. Esegui lo script Node (che ora è nella cartella principale)
-          node update_history.js data_327.json
-          
-          # 3. Pulizia file temporaneo
-          rm data_327.json
+          # Esegue la logica delle 24 ore
+          node update_history.js mondo327.json
 
-      - name: Salva tutto (Mondo e Storico)
+      - name: Salva tutto (Mondo, Storico e Inattivi)
         run: |
           git config --global user.name "Re Panza Bot"
           git config --global user.email "bot@repanza.it"
           
-          # Aggiunge i file generati o aggiornati
-          git add mondo327.json db_327.json || echo "Nessun file nuovo"
+          # Aggiunge tutti i file JSON generati o modificati
+          git add mondo*.json db_*.json inattivi_*.json
           
-          git commit -m "🤖 Update automatico: $(date)" || echo "Niente da aggiornare"
+          git commit -m "🤖 Update automatico: $(date +'%d-%m-%Y %H:%M')" || echo "Niente da aggiornare"
           git push
