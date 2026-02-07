@@ -5,7 +5,6 @@
 
 // --- 1. TOAST MESSAGE (Notifica a comparsa) ---
 function showToast(msg) {
-    // Rimuove toast esistenti
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
 
@@ -13,7 +12,6 @@ function showToast(msg) {
     t.className = "toast";
     t.innerText = msg;
     
-    // Stile iniettato via JS per non dipendere dai CSS dei singoli file
     Object.assign(t.style, {
         position: 'fixed',
         bottom: '90px',
@@ -35,13 +33,11 @@ function showToast(msg) {
 
     document.body.appendChild(t);
 
-    // Animazione entrata
     requestAnimationFrame(() => {
         t.style.opacity = '1';
         t.style.transform = 'translate(-50%, -10px)';
     });
 
-    // Rimozione automatica
     setTimeout(() => {
         t.style.opacity = '0';
         t.style.transform = 'translate(-50%, 0)';
@@ -67,11 +63,6 @@ function toggleAI() {
     
     const isHidden = win.style.display === 'none' || win.style.display === '';
     win.style.display = isHidden ? 'block' : 'none';
-    
-    // Fix scroll su mobile se necessario
-    if (isHidden && window.innerWidth < 768) {
-        // window.scrollTo({ top: 0, behavior: 'smooth' }); 
-    }
 }
 
 // --- 4. UTILITY ---
