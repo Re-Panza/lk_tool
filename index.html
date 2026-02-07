@@ -302,6 +302,7 @@
         </div>
     </div>
 
+    <script src="https://re-panza.github.io/lk_tool/common.js"></script>
     <script src="https://re-panza.github.io/re-panza-core/re_panza_brain.js"></script>
 
     <script>
@@ -311,15 +312,6 @@
                 navigator.serviceWorker.register('sw.js');
             });
         }
-
-        // 3. FIX TASTO INVIO: Questo permette di inviare premendo "Enter"
-        document.addEventListener('keypress', function (e) {
-            const inputField = document.getElementById('ai-input');
-            // Se l'utente preme Invio mentre è nel campo di testo, clicca "Invia" per lui
-            if (e.key === 'Enter' && document.activeElement === inputField) {
-                chiediAlRe();
-            }
-        });
     </script>
 </body>
 </html>
