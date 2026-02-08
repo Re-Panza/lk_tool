@@ -1,9 +1,28 @@
 /* L&K Tools - Common Functions 
-   Gestisce: AI, Toast Notifications, Clipboard, Utility
-   Url: https://re-panza.github.io/lk_tool/common.js
+   Gestisce: AI, Toast Notifications, Clipboard, Utility, Math
 */
 
-// --- 1. TOAST MESSAGE (Notifica a comparsa) ---
+// --- 1. CALCOLO DISTANZA ESAGONALE ---
+function getDist(x1, y1, x2, y2) {
+    let cy1 = y1;
+    let cz1 = x1 - Math.floor(y1 / 2);
+    let cx1 = -cy1 - cz1;
+
+    let cy2 = y2;
+    let cz2 = x2 - Math.floor(y2 / 2);
+    let cx2 = -cy2 - cz2;
+
+    return Math.max(Math.abs(cx1 - cx2), Math.abs(cy1 - cy2), Math.abs(cz1 - cz2));
+}
+
+// --- 2. PARSING LINK COORDINATE ---
+function parseLKLink(url) {
+    let m = url.match(/coordinates\?(\d+),(\d+)&(\d+)/);
+    if (!m) return null;
+    return { x: parseInt(m[1]), y: parseInt(m[2]), w: m[3] };
+}
+
+// --- 3. TOAST MESSAGE ---
 function showToast(msg) {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
@@ -32,7 +51,6 @@ function showToast(msg) {
     });
 
     document.body.appendChild(t);
-
     requestAnimationFrame(() => {
         t.style.opacity = '1';
         t.style.transform = 'translate(-50%, -10px)';
@@ -45,41 +63,28 @@ function showToast(msg) {
     }, 2000);
 }
 
-// --- 2. COPY TO CLIPBOARD (Compatibile PC/Mobile) ---
+// --- 4. CLIPBOARD & UTILITY ---
 function copyToClipboard(text) {
     if (!text) return;
-    navigator.clipboard.writeText(text).then(function() {
-        showToast("Copiato: " + text);
-    }, function(err) {
-        console.error('Errore copia', err);
-        alert("Impossibile copiare automaticamente. Seleziona e copia manualmente.");
-    });
+    navigator.clipboard.writeText(text).then(() => showToast("Copiato: " + text));
 }
 
-// --- 3. GESTIONE AI (Apertura/Chiusura) ---
-function toggleAI() {
-    const win = document.getElementById('ai-window');
-    if (!win) return;
-    
-    const isHidden = win.style.display === 'none' || win.style.display === '';
-    win.style.display = isHidden ? 'block' : 'none';
-}
-
-// --- 4. UTILITY ---
 function pad(n) { 
     return n < 10 ? '0' + n : n; 
 }
 
-// --- 5. EVENT LISTENER GLOBALE (Invio per AI) ---
+// --- 5. GESTIONE AI ---
+function toggleAI() {
+    const win = document.getElementById('ai-window');
+    if (!win) return;
+    win.style.display = (win.style.display === 'none' || win.style.display === '') ? 'block' : 'none';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const aiInput = document.getElementById('ai-input');
     if (aiInput) {
-        aiInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                if (typeof chiediAlRe === 'function') {
-                    chiediAlRe();
-                }
-            }
+        aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && typeof chiediAlRe === 'function') chiediAlRe();
         });
     }
 });
