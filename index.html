@@ -37,58 +37,29 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1 data-lang="home_title">⚔️ L&K Tools Hub</h1>
-            <p data-lang="home_subtitle">Semplifica la tua strategia di conquista</p>
-        </header>
-
+        <header><h1>⚔️ L&K Tools Hub</h1><p>Semplifica la tua strategia di conquista</p></header>
         <div class="grid">
             <a href="https://re-panza.github.io/ricerca_giocatori/" class="tool-card">
                 <div class="icon-box">🔍</div>
-                <div class="tool-info">
-                    <b data-lang="card_search_title">Ricerca Giocatori</b>
-                    <span data-lang="card_search_desc">Trova tutti i castelli di un giocatore.</span>
-                </div>
+                <div class="tool-info"><b>Ricerca Giocatori</b><span>Trova tutti i castelli di un giocatore.</span></div>
             </a>
             <a href="https://re-panza.github.io/calcolo-partenze/" class="tool-card">
                 <div class="icon-box">🎯</div>
-                <div class="tool-info">
-                    <b data-lang="card_calc_title">Calcola Partenze</b>
-                    <span data-lang="card_calc_desc">Scannerizza i link e calcola partenze.</span>
-                </div>
+                <div class="tool-info"><b>Calcola Partenze</b><span>Scannerizza i link e calcola partenze.</span></div>
             </a>
             <a href="https://re-panza.github.io/calcola_argento/" class="tool-card">
                 <div class="icon-box">💰</div>
-                <div class="tool-info">
-                    <b data-lang="card_silver_title">Calcolo Argento</b>
-                    <span data-lang="card_silver_desc">Calcola l'argento necessario.</span>
-                </div>
+                <div class="tool-info"><b>Calcolo Argento</b><span>Calcola l'argento necessario.</span></div>
             </a>
             <a href="https://re-panza.github.io/self_trick/" class="tool-card">
                 <div class="icon-box">🛡️</div>
-                <div class="tool-info">
-                    <b data-lang="card_st_title">Self Trick</b>
-                    <span data-lang="card_st_desc">Tempi perfetti per il Self Trick.</span>
-                </div>
+                <div class="tool-info"><b>Self Trick</b><span>Tempi perfetti per il Self Trick.</span></div>
             </a>
         </div>
-
-        <footer class="paypal-footer">
-            <a href="https://paypal.me/Longo11" target="_blank" class="paypal-link" data-lang="footer_coffee">☕ Offrimi un caffè su PayPal</a>
-        </footer>
+        <footer class="paypal-footer"><a href="https://paypal.me/Longo11" target="_blank" class="paypal-link">☕ PayPal</a></footer>
     </div>
 
-    <div id="ai-assistant-container">
-        <div id="ai-window">
-            <div class="ai-header"><span>👑 Re Panza</span><span onclick="toggleAI()" style="cursor:pointer">×</span></div>
-            <div id="ai-content" style="height:200px;overflow-y:auto;color:#ccc;font-size:13px;margin-bottom:10px;">Ciao! Come posso aiutarti?</div>
-            <div class="ai-input-area">
-                <input type="text" id="ai-input" placeholder="...">
-                <button id="ai-send-btn" onclick="chiediAlRe()">Invia</button>
-            </div>
-        </div>
-        <div id="ai-button" onclick="toggleAI()"><img src="https://re-panza.github.io/lk_tool/re-panza-ai.png" alt="AI"></div>
-    </div>
+    <div id="ai-assistant-container"><div id="ai-window"><div class="ai-header"><span>👑 Re Panza</span><span onclick="toggleAI()" style="cursor:pointer">×</span></div><div id="ai-content"><p>Ciao!</p></div><div class="ai-input-area"><input type="text" id="ai-input" placeholder="..."><button id="ai-send-btn" onclick="chiediAlRe()">Invia</button></div></div><div id="ai-button" onclick="toggleAI()"><img src="https://re-panza.github.io/lk_tool/re-panza-ai.png" alt="AI"></div></div>
 
     <script src="https://re-panza.github.io/lk_tool/common.js"></script>
     <script src="https://re-panza.github.io/re-panza-core/re_panza_brain.js"></script>
