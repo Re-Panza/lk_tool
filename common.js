@@ -22,7 +22,7 @@ function parseLKLink(url) {
     return { x: parseInt(m[1]), y: parseInt(m[2]), w: m[3] };
 }
 
-// --- 3. TOAST MESSAGE ---
+// --- 3. TOAST MESSAGE (Notifiche a scomparsa) ---
 function showToast(msg) {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
@@ -47,7 +47,8 @@ function showToast(msg) {
         pointerEvents: 'none',
         opacity: '0',
         transition: 'opacity 0.3s, transform 0.3s',
-        whiteSpace: 'nowrap'
+        whiteSpace: 'nowrap',
+        textAlign: 'center'
     });
 
     document.body.appendChild(t);
@@ -60,7 +61,7 @@ function showToast(msg) {
         t.style.opacity = '0';
         t.style.transform = 'translate(-50%, 0)';
         setTimeout(() => t.remove(), 300);
-    }, 2000);
+    }, 4000); // Durata un po' più lunga per leggere le novità
 }
 
 // --- 4. CLIPBOARD & UTILITY ---
@@ -90,34 +91,56 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================================
-   6. GESTORE AGGIORNAMENTI PWA (CENTRALE)
+   6. GESTORE AGGIORNAMENTI PWA (AVANZATO)
    ========================================= */
 (function() {
-    // Recupera la versione salvata nel browser
     const currentSavedVersion = localStorage.getItem('lk_tool_version');
+    
+    // Controlla se siamo in Homepage (adatta i nomi se necessario)
+    const path = window.location.pathname;
+    // Considera homepage: root (/), index.html, o file che contengono "homepage"
+    const isHomePage = path.endsWith('/') || path.includes('index.html') || path.includes('homepage');
 
-    // Al caricamento della pagina, controlla APP_VERSION
     window.addEventListener('load', function() {
-        // APP_VERSION deve essere definita in version.js (caricato PRIMA di common.js)
+        // APP_VERSION viene caricata da version.js
         if (typeof APP_VERSION !== 'undefined') {
             
-            // Debug (opzionale)
-            // console.log(`Versione Salvata: ${currentSavedVersion} | Versione Online: ${APP_VERSION}`);
+            // A) GESTIONE POST-AGGIORNAMENTO (Messaggio "Aggiornato!")
+            if (localStorage.getItem('lk_tool_just_updated') === 'true') {
+                // Rimuovi il flag per non mostrarlo sempre
+                localStorage.removeItem('lk_tool_just_updated');
+                
+                // Recupera le news (o usa un testo default)
+                const newsText = (typeof APP_NEWS !== 'undefined' && APP_NEWS) 
+                    ? APP_NEWS 
+                    : "Miglioramenti generali e bug fix.";
+                
+                // Mostra il toast con le novità
+                setTimeout(() => {
+                    showToast(`🎉 Aggiornato alla v${APP_VERSION}!\n${newsText}`);
+                }, 800);
+                
+                // Allinea la versione salvata
+                localStorage.setItem('lk_tool_version', APP_VERSION);
+                return; 
+            }
 
-            // Se è la prima volta assoluta
+            // B) CONTROLLO NUOVA VERSIONE
             if (!currentSavedVersion) {
+                // Prima visita assoluta: salva la versione attuale e basta
                 localStorage.setItem('lk_tool_version', APP_VERSION);
             } 
-            // Se le versioni sono diverse -> Mostra Banner
             else if (APP_VERSION !== currentSavedVersion) {
-                _mostraBannerAggiornamento(APP_VERSION);
+                // C'è un aggiornamento! Mostralo SOLO se siamo in Homepage
+                if (isHomePage) {
+                    _mostraBannerAggiornamento(APP_VERSION);
+                }
             }
         }
     });
 
-    // Funzione interna per disegnare il banner
+    // Funzione interna per disegnare il banner verde
     function _mostraBannerAggiornamento(newVer) {
-        // Evita di creare doppi banner
         if (document.getElementById('pwa-update-banner')) return;
 
         const div = document.createElement('div');
@@ -125,39 +148,42 @@ document.addEventListener('DOMContentLoaded', () => {
         div.style.cssText = `
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px;
-            background: rgba(16, 185, 129, 0.95); /* Verde */
+            background: rgba(16, 185, 129, 0.98); /* Verde Smeraldo */
             border: 2px solid #fff;
             border-radius: 16px;
             color: white; 
-            padding: 20px; 
+            padding: 16px; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
             backdrop-filter: blur(8px);
             z-index: 99999;
-            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
             animation: slideUp 0.5s ease-out;
-            font-family: sans-serif; text-align: center;
+            font-family: sans-serif; cursor: pointer;
         `;
         
         div.innerHTML = `
-            <div style="font-weight:800; font-size:16px; text-transform:uppercase; letter-spacing:1px;">
-                🚀 Aggiornamento ${newVer}
-            </div>
-            <div style="font-size:13px; opacity:0.9; margin-bottom:5px;">
-                Nuove funzioni disponibili!
+            <div style="flex:1; text-align:left;">
+                <div style="font-weight:800; font-size:15px; text-transform:uppercase; letter-spacing:0.5px;">
+                    🚀 Update v${newVer}
+                </div>
+                <div style="font-size:12px; opacity:0.95; margin-top:2px;">
+                    È disponibile una nuova versione.
+                </div>
             </div>
             <button id="btnReloadPWA" style="
                 background: #fff; color: #10b981; border: none; 
-                padding: 10px 24px; border-radius: 50px; 
-                font-weight: 800; font-size: 14px; cursor: pointer;
+                padding: 8px 16px; border-radius: 50px; 
+                font-weight: 800; font-size: 13px; cursor: pointer;
                 text-transform: uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             ">
-                🔄 AGGIORNA ORA
+                AGGIORNA
             </button>
         `;
 
-        // Click handler: salva nuova versione e ricarica
-        div.querySelector('#btnReloadPWA').onclick = function() {
+        // Al click: Salva, Flagga come "appena aggiornato" e Ricarica
+        div.onclick = function() {
             localStorage.setItem('lk_tool_version', newVer);
+            localStorage.setItem('lk_tool_just_updated', 'true');
             window.location.reload();
         };
         
