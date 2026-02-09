@@ -1,7 +1,13 @@
 /* L&K Tools - Common Functions 
-   Gestisce: AI, Toast Notifications, Clipboard, Utility, Math, PWA Updates.
-   VERSIONE PULITA: Nessuna animazione, nessuna intro.
+   Gestisce: AI, Toast, Clipboard, Utility, Math.
+   PLUS: Gestione Aggiornamenti (SOLO SU SMARTPHONE)
 */
+
+// --- 0. RILEVATORE DISPOSITIVO ---
+// Ritorna TRUE se siamo su smartphone, FALSE se siamo su PC
+const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
+};
 
 // --- 1. CALCOLO DISTANZA ESAGONALE ---
 function getDist(x1, y1, x2, y2) {
@@ -33,36 +39,20 @@ function showToast(msg) {
     t.innerText = msg;
     
     Object.assign(t.style, {
-        position: 'fixed',
-        bottom: '90px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'rgba(52, 211, 153, 0.95)',
-        color: '#000',
-        padding: '12px 24px',
-        borderRadius: '50px',
-        fontWeight: 'bold',
-        zIndex: '10000',
-        boxShadow: '0 5px 15px rgba(0,0,0,0.5)',
-        fontFamily: 'system-ui, sans-serif',
-        pointerEvents: 'none',
-        opacity: '0',
-        transition: 'opacity 0.3s, transform 0.3s', // Solo per il toast
-        whiteSpace: 'pre-line', 
-        textAlign: 'center',
-        maxWidth: '90%'
+        position: 'fixed', bottom: '90px', left: '50%', transform: 'translateX(-50%)',
+        background: 'rgba(52, 211, 153, 0.95)', color: '#000',
+        padding: '12px 24px', borderRadius: '50px', fontWeight: 'bold',
+        zIndex: '10000', boxShadow: '0 5px 15px rgba(0,0,0,0.5)',
+        fontFamily: 'system-ui, sans-serif', pointerEvents: 'none',
+        opacity: '0', transition: 'opacity 0.3s, transform 0.3s',
+        whiteSpace: 'pre-line', textAlign: 'center', maxWidth: '90%'
     });
 
     document.body.appendChild(t);
-    // Piccola animazione solo per il toast (necessaria per farlo apparire)
-    requestAnimationFrame(() => {
-        t.style.opacity = '1';
-        t.style.transform = 'translate(-50%, -10px)';
-    });
+    requestAnimationFrame(() => { t.style.opacity = '1'; t.style.transform = 'translate(-50%, -10px)'; });
 
     setTimeout(() => {
-        t.style.opacity = '0';
-        t.style.transform = 'translate(-50%, 0)';
+        t.style.opacity = '0'; t.style.transform = 'translate(-50%, 0)';
         setTimeout(() => t.remove(), 300);
     }, 4000); 
 }
@@ -72,10 +62,7 @@ function copyToClipboard(text) {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => showToast("Copiato: " + text));
 }
-
-function pad(n) { 
-    return n < 10 ? '0' + n : n; 
-}
+function pad(n) { return n < 10 ? '0' + n : n; }
 
 // --- 5. GESTIONE AI ---
 function toggleAI() {
@@ -83,7 +70,6 @@ function toggleAI() {
     if (!win) return;
     win.style.display = (win.style.display === 'none' || win.style.display === '') ? 'block' : 'none';
 }
-
 document.addEventListener('DOMContentLoaded', () => {
     const aiInput = document.getElementById('ai-input');
     if (aiInput) {
@@ -94,12 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================================
-   6. GESTORE AGGIORNAMENTI PWA (Solo Homepage)
+   6. GESTORE AGGIORNAMENTI PWA (Solo Smartphone)
    ========================================= */
 (function() {
+    // SE SIAMO SU PC, USCIAMO SUBITO DALLA FUNZIONE (Nessun banner)
+    if (!isMobileDevice()) return; 
+
     const currentSavedVersion = localStorage.getItem('lk_tool_version');
     const path = window.location.pathname;
-    // Identifica se siamo in Homepage
     const isHomePage = path.endsWith('/') || path.includes('index.html') || path.includes('homepage');
 
     window.addEventListener('load', function() {
@@ -113,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? APP_NEWS 
                     : "Miglioramenti generali.";
                 
-                // Mostra subito il toast
+                // Mostra il toast di conferma
                 setTimeout(() => {
                     showToast(`🎉 Aggiornato alla v${APP_VERSION}!\n${newsText}`);
                 }, 500);
