@@ -10,6 +10,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta charset="utf-8" />
     <title>L&K Tools Hub | Re Panza</title>
+    
+    <script src="https://re-panza.github.io/lk_tool/version.js"></script>
+
     <style>
         :root { --bg:#0f172a; --card:#111c33; --accent:#60a5fa; --text:#e8eefc; --muted:#93a4c7; --border:rgba(255,255,255,0.1); --success:#34d399; }
         body { margin:0; font-family:system-ui,-apple-system,sans-serif; background:radial-gradient(circle at top right,rgba(96,165,250,0.12),transparent 50%),radial-gradient(circle at bottom left,rgba(52,211,153,0.08),transparent 50%),var(--bg); color:var(--text); display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:40px 20px; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
@@ -62,7 +65,7 @@
                     <span>Scannerizza i link L&K e calcola gli orari di partenza.</span>
                 </div>
             </a>
-            <a href="https://re-panza.github.io/calcola_argento/" class="tool-card">
+            <a href="https://re-panza.github.io/calcolo_argento/" class="tool-card">
                 <div class="icon-box">💰</div>
                 <div class="tool-info">
                     <b>Calcolo Argento</b>
@@ -113,7 +116,60 @@
             window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
         }
     </script>
+
+    <script>
+      // 1. QUESTA È LA TUA VERSIONE LOCALE (DENTRO L'APK)
+      const VERSIONE_INSTALLATA = '9.8'; 
+
+      // 2. CONTROLLO AUTOMATICO
+      window.addEventListener('load', function() {
+          if (typeof APP_VERSION !== 'undefined') {
+              console.log("Versione APK:", VERSIONE_INSTALLATA);
+              console.log("Versione GitHub:", APP_VERSION);
+
+              if (APP_VERSION !== VERSIONE_INSTALLATA) {
+                  mostraBannerUpdate(APP_VERSION);
+              }
+          }
+      });
+
+      function mostraBannerUpdate(nuovaVer) {
+          const div = document.createElement('div');
+          div.style.cssText = `
+              position: fixed; bottom: 0; left: 0; width: 100%;
+              background: rgba(15, 23, 42, 0.98); border-top: 2px solid #fbbf24;
+              color: white; padding: 25px 20px; text-align: center; z-index: 10000;
+              box-shadow: 0 -10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+              animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+              font-family: sans-serif;
+          `;
+          
+          // LINK GENERICO (lo aggiornerai quando hai il link del Drive/Dropbox)
+          const linkDownload = "#"; 
+
+          div.innerHTML = `
+              <h3 style="margin:0 0 10px 0; color:#fbbf24; text-transform:uppercase; letter-spacing:1px;">
+                 🚀 Aggiornamento Disponibile!
+              </h3>
+              <p style="font-size:14px; margin-bottom:20px; color:#cbd5e1; line-height:1.5;">
+                 La tua versione: <b style="color:#ef4444">${VERSIONE_INSTALLATA}</b><br>
+                 Nuova versione: <b style="color:#34d399">${nuovaVer}</b>
+              </p>
+              <a href="${linkDownload}" target="_blank" style="
+                  background: #fbbf24; color: #0f172a; text-decoration: none;
+                  padding: 12px 30px; border-radius: 50px; font-weight: 800; font-size:14px;
+                  display: inline-block; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+                  text-transform: uppercase;
+              ">Scarica Ora</a>
+              
+              <div onclick="this.parentElement.remove()" style="
+                  margin-top: 15px; font-size: 11px; color: #64748b; cursor: pointer; 
+                  text-decoration: underline; text-transform: uppercase; letter-spacing: 0.5px;
+              ">Chiudi e usa versione vecchia</div>
+          `;
+          
+          document.body.appendChild(div);
+      }
+    </script>
 </body>
 </html>
-
-
