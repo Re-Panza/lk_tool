@@ -1,5 +1,5 @@
 /* L&K Tools - Common Functions 
-   Gestisce: AI, Toast Notifications, Clipboard, Utility, Math, PWA Updates
+   Gestisce: AI, Toast Notifications, Clipboard, Utility, Math, PWA Updates, Intro Animation
 */
 
 // --- 1. CALCOLO DISTANZA ESAGONALE ---
@@ -47,8 +47,9 @@ function showToast(msg) {
         pointerEvents: 'none',
         opacity: '0',
         transition: 'opacity 0.3s, transform 0.3s',
-        whiteSpace: 'nowrap',
-        textAlign: 'center'
+        whiteSpace: 'pre-line', // Permette di andare a capo con \n
+        textAlign: 'center',
+        maxWidth: '90%'
     });
 
     document.body.appendChild(t);
@@ -61,7 +62,7 @@ function showToast(msg) {
         t.style.opacity = '0';
         t.style.transform = 'translate(-50%, 0)';
         setTimeout(() => t.remove(), 300);
-    }, 4000); // Durata un po' più lunga per leggere le novità
+    }, 4000); // 4 secondi per leggere bene
 }
 
 // --- 4. CLIPBOARD & UTILITY ---
@@ -91,47 +92,39 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================================
-   6. GESTORE AGGIORNAMENTI PWA (AVANZATO)
+   6. GESTORE AGGIORNAMENTI PWA (Solo Homepage)
    ========================================= */
 (function() {
     const currentSavedVersion = localStorage.getItem('lk_tool_version');
-    
-    // Controlla se siamo in Homepage (adatta i nomi se necessario)
     const path = window.location.pathname;
-    // Considera homepage: root (/), index.html, o file che contengono "homepage"
+    // Identifica se siamo in Homepage
     const isHomePage = path.endsWith('/') || path.includes('index.html') || path.includes('homepage');
 
     window.addEventListener('load', function() {
-        // APP_VERSION viene caricata da version.js
         if (typeof APP_VERSION !== 'undefined') {
             
-            // A) GESTIONE POST-AGGIORNAMENTO (Messaggio "Aggiornato!")
+            // A) DOPO L'AGGIORNAMENTO: Mostra le novità
             if (localStorage.getItem('lk_tool_just_updated') === 'true') {
-                // Rimuovi il flag per non mostrarlo sempre
                 localStorage.removeItem('lk_tool_just_updated');
                 
-                // Recupera le news (o usa un testo default)
                 const newsText = (typeof APP_NEWS !== 'undefined' && APP_NEWS) 
                     ? APP_NEWS 
-                    : "Miglioramenti generali e bug fix.";
+                    : "Miglioramenti generali.";
                 
-                // Mostra il toast con le novità
                 setTimeout(() => {
                     showToast(`🎉 Aggiornato alla v${APP_VERSION}!\n${newsText}`);
-                }, 800);
+                }, 1000); // Aspetta che finisca l'intro
                 
-                // Allinea la versione salvata
                 localStorage.setItem('lk_tool_version', APP_VERSION);
                 return; 
             }
 
             // B) CONTROLLO NUOVA VERSIONE
             if (!currentSavedVersion) {
-                // Prima visita assoluta: salva la versione attuale e basta
                 localStorage.setItem('lk_tool_version', APP_VERSION);
             } 
             else if (APP_VERSION !== currentSavedVersion) {
-                // C'è un aggiornamento! Mostralo SOLO se siamo in Homepage
+                // Mostra banner SOLO in Home
                 if (isHomePage) {
                     _mostraBannerAggiornamento(APP_VERSION);
                 }
@@ -139,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Funzione interna per disegnare il banner verde
     function _mostraBannerAggiornamento(newVer) {
         if (document.getElementById('pwa-update-banner')) return;
 
@@ -148,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         div.style.cssText = `
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px;
-            background: rgba(16, 185, 129, 0.98); /* Verde Smeraldo */
+            background: rgba(16, 185, 129, 0.98);
             border: 2px solid #fff;
             border-radius: 16px;
             color: white; 
@@ -167,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     🚀 Update v${newVer}
                 </div>
                 <div style="font-size:12px; opacity:0.95; margin-top:2px;">
-                    È disponibile una nuova versione.
+                    Nuova versione disponibile.
                 </div>
             </div>
             <button id="btnReloadPWA" style="
@@ -180,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </button>
         `;
 
-        // Al click: Salva, Flagga come "appena aggiornato" e Ricarica
         div.onclick = function() {
             localStorage.setItem('lk_tool_version', newVer);
             localStorage.setItem('lk_tool_just_updated', 'true');
@@ -188,5 +179,98 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         document.body.appendChild(div);
+    }
+})();
+
+/* =========================================
+   7. LIVE INTRO ANIMATION (Re Panza + Zoom)
+   ========================================= */
+(function() {
+    // Configurazione Immagine
+    const INTRO_IMAGE = 're_panza_intro.png'; 
+    const FORCE_INTRO = false; // Metti 'true' per testare sempre
+
+    window.addEventListener('load', function() {
+        const hasSeen = sessionStorage.getItem('lk_intro_played');
+        const path = window.location.pathname;
+        const isHome = path.endsWith('/') || path.includes('index.html') || path.includes('homepage');
+
+        // Esegue l'intro solo in Home e solo una volta per sessione
+        if ((!hasSeen || FORCE_INTRO) && isHome) {
+            runLiveIntro();
+        }
+    });
+
+    function runLiveIntro() {
+        // Stile per lo zoom della pagina sottostante
+        const style = document.createElement('style');
+        style.innerHTML = `
+            body {
+                transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1), opacity 1.2s ease;
+                transform-origin: center 30vh;
+                transform: scale(0.6);
+                opacity: 0;
+                overflow: hidden;
+            }
+            body.intro-zoom-active {
+                transform: scale(1);
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Overlay scuro
+        const overlay = document.createElement('div');
+        overlay.id = 'intro-overlay';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #0f172a; 
+            z-index: 999999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.8s ease;
+        `;
+
+        // Contenuto Overlay (Re Panza)
+        overlay.innerHTML = `
+            <div style="text-align:center; animation: float 3s ease-in-out infinite;">
+                <img src="${INTRO_IMAGE}" 
+                     onerror="this.src='icona.png'" 
+                     style="width: 220px; max-width: 60%; drop-shadow: 0 0 30px rgba(96,165,250,0.6); margin-bottom: 20px;">
+                
+                <h2 style="
+                    color: #fbbf24; font-family: system-ui; font-size: 24px; 
+                    margin: 0; text-transform: uppercase; letter-spacing: 2px;
+                    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+                ">Benvenuto al Castello!</h2>
+                
+                <p style="color: #94a3b8; margin-top: 10px; font-size: 14px;">Preparazione sala di guerra...</p>
+            </div>
+            <style>
+                @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+            </style>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // Sequenza temporale
+        setTimeout(() => {
+            // 1.8s: Via overlay, Zoom pagina
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                document.body.classList.add('intro-zoom-active');
+                
+                // Pulizia finale
+                setTimeout(() => {
+                    overlay.remove();
+                    document.body.style.overflow = '';
+                    style.remove();
+                    document.body.style.transform = '';
+                    document.body.style.opacity = '';
+                    sessionStorage.setItem('lk_intro_played', 'true');
+                }, 1000);
+
+            }, 1800); 
+        }, 100);
     }
 })();
