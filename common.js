@@ -110,10 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? APP_NEWS 
                     : "Miglioramenti generali.";
                 
-                // Ritardo lungo per aspettare la intro lenta
                 setTimeout(() => {
                     showToast(`🎉 Aggiornato alla v${APP_VERSION}!\n${newsText}`);
-                }, 4500); 
+                }, 4500); // Ritardo lungo per non sovrapporsi all'intro
                 
                 localStorage.setItem('lk_tool_version', APP_VERSION);
                 return; 
@@ -182,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 /* =========================================
-   7. LIVE INTRO ANIMATION (Re Panza Gigante + Slow Motion)
+   7. LIVE INTRO ANIMATION (Re Panza DX + Home Profonda)
    ========================================= */
 (function() {
     const INTRO_IMAGE = 're_panza_intro.png'; 
@@ -199,19 +198,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function runLiveIntro() {
-        // 1. Stile Iniziale Pagina (LENTISSIMO)
+        // 1. Stile Iniziale Pagina (LONTANISSIMA)
         const style = document.createElement('style');
         style.innerHTML = `
             body {
-                /* Durata 4 secondi per zoom e opacità */
+                /* Durata 4 secondi: parte piccolissima e arriva normale */
                 transition: transform 4.0s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 3.5s ease;
                 transform-origin: center 50vh; 
-                transform: scale(0.6) translateY(50px);
+                transform: scale(0.35); /* MOLTO PICCOLA inizialmente */
                 opacity: 0;
                 overflow: hidden;
             }
             body.intro-zoom-active {
-                transform: scale(1) translateY(0);
+                transform: scale(1);
                 opacity: 1;
             }
         `;
@@ -225,57 +224,63 @@ document.addEventListener('DOMContentLoaded', () => {
             background: #0f172a; 
             z-index: 999999;
             display: flex; flex-direction: column;
-            align-items: center; /* Centrato orizzontalmente */
-            justify-content: center; /* Centrato verticalmente */
-            transition: background-color 3.5s ease; /* Sfondo svanisce lento */
+            align-items: flex-end; /* TUTTO A DESTRA */
+            justify-content: flex-end; /* Allineato in basso/centro */
+            padding-bottom: 0;
+            transition: background-color 3.5s ease;
         `;
 
-        // 3. Contenuto Re Panza (FERMO e GIGANTE)
+        // 3. Contenuto Re Panza (FERMO e ENORME)
         const contentBox = document.createElement('div');
         contentBox.style.cssText = `
-            text-align: center;
+            text-align: right;
             width: 100%;
-            transition: opacity 3.0s ease-in; /* Svanisce lentamente */
+            height: 100%;
+            display: flex;
+            align-items: flex-end; /* Immagine poggia sul fondo */
+            justify-content: flex-end; /* Immagine a destra */
+            transition: opacity 3.0s ease-in; /* Solo fade out */
             opacity: 1;
         `;
         
-        // Immagine impostata per essere GRANDE (80% altezza schermo)
+        // Immagine impostata per essere GIGANTE A DESTRA
         contentBox.innerHTML = `
             <img src="${INTRO_IMAGE}" 
                  onerror="this.src='icona.png'" 
                  style="
-                    height: 80vh; /* Occupa 80% altezza schermo */
+                    height: 90vh; /* QUASI TUTTO LO SCHERMO */
                     width: auto;
-                    max-width: 95vw;
+                    max-width: 80vw;
                     object-fit: contain;
-                    drop-shadow: 0 0 50px rgba(96,165,250,0.4); 
-                    margin-bottom: 0;
+                    drop-shadow: -10px 0 50px rgba(96,165,250,0.3); 
+                    margin-right: -20px; /* Leggermente fuori bordo per effetto cinema */
                  ">
             
             <h2 style="
-                position: absolute; bottom: 5vh; width: 100%; left: 0;
+                position: absolute; bottom: 5vh; right: 5vw;
                 color: #fbbf24; font-family: system-ui; font-size: 24px; 
                 margin: 0; text-transform: uppercase; letter-spacing: 4px;
                 text-shadow: 0 4px 20px rgba(0,0,0,0.9);
+                text-align: right;
             ">Benvenuto</h2>
         `;
 
         overlay.appendChild(contentBox);
         document.body.appendChild(overlay);
 
-        // --- SEQUENZA TEMPORALE (LENTA) ---
+        // --- SEQUENZA TEMPORALE ---
         setTimeout(() => {
             
-            // 1. La Home sale e si ingrandisce (parte l'animazione body)
+            // 1. La Home sale (Zoom In profondo)
             document.body.classList.add('intro-zoom-active');
 
             // 2. Lo sfondo diventa trasparente
             overlay.style.backgroundColor = 'rgba(15, 23, 42, 0)'; 
 
-            // 3. Re Panza svanisce sul posto (SENZA MUOVERSI)
+            // 3. Re Panza svanisce sul posto (IMMOBILE)
             contentBox.style.opacity = '0';
 
-            // Pulizia finale dopo 4.2 secondi
+            // Pulizia finale
             setTimeout(() => {
                 overlay.remove();
                 document.body.style.overflow = '';
@@ -285,6 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.setItem('lk_intro_played', 'true');
             }, 4200);
 
-        }, 200); // Pausa minima iniziale
+        }, 200);
     }
 })();
