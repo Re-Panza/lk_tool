@@ -15,7 +15,7 @@
 
     <style>
         :root { --bg:#0f172a; --card:#111c33; --accent:#60a5fa; --text:#e8eefc; --muted:#93a4c7; --border:rgba(255,255,255,0.1); --success:#34d399; }
-        body { margin:0; font-family:system-ui,-apple-system,sans-serif; background:radial-gradient(circle at top right,rgba(96,165,250,0.12),transparent 50%),radial-gradient(circle at bottom left,rgba(52,211,153,0.08),transparent 50%),var(--bg); color:var(--text); display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:40px 20px; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+        body { margin:0; font-family:system-ui,-apple-system,sans-serif; background:radial-gradient(circle at top right,rgba(96,165,250,0.12),transparent 50%),radial-gradient(circle at bottom left,rgba(52,211,153,0.08),transparent 50%),var(--bg); color:var(--text); display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:40px 20px 100px 20px; /* Padding extra sotto */ -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
         .container { max-width:480px; width:100%; text-align:center; }
         header { margin-bottom:40px; }
         h1 { font-size:32px; margin:0; letter-spacing:-1px; background:linear-gradient(to right,#fff,var(--accent)); -webkit-background-clip:text; -webkit-fill-color:transparent; }
@@ -30,15 +30,55 @@
         .paypal-footer { margin-top:60px; padding-top:25px; border-top:1px solid var(--border); }
         .paypal-link { color:#fff; text-decoration:none; font-weight:bold; font-size:14px; background:#0070ba; padding:12px 28px; border-radius:50px; display:inline-flex; align-items:center; gap:10px; transition:0.3s; box-shadow:0 4px 15px rgba(0,112,186,0.3); }
         
-        #ai-assistant-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
-        #ai-button { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); overflow: hidden; border: 2px solid var(--accent); }
-        #ai-button img { width: 100%; height: 100%; object-fit: cover; }
-        #ai-window { display: none; position: absolute; bottom: 85px; right: 0; width: 85vw; max-width: 320px; background: var(--card); border: 1px solid var(--accent); border-radius: 20px; padding: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); }
-        .ai-header { color: var(--accent); font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
-        #ai-content { max-height: 250px; overflow-y: auto; margin-bottom: 10px; font-size: 13px; color: var(--text); }
-        .ai-input-area { display: flex; gap: 5px; border-top: 1px solid var(--border); padding-top: 10px; }
-        #ai-input { flex: 1; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 5px; padding: 8px; font-size: 12px; }
-        #ai-send-btn { background: var(--accent); border: none; border-radius: 5px; padding: 5px 15px; cursor: pointer; font-weight: bold; color: #000; }
+        /* STILE PER L'ASSISTENTE AI FISSO SULLO SCHERMO */
+        #ai-assistant-wrapper { 
+            position: fixed; 
+            bottom: 30px; /* Alzato per evitare barre di navigazione del telefono */
+            right: 20px; 
+            z-index: 99990; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+        }
+        
+        #ai-button { 
+            width: 65px; 
+            height: 65px; 
+            border-radius: 50%; 
+            background: #1e293b; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); 
+            border: 2px solid #fbbf24; 
+            transition: transform 0.2s; 
+        }
+        #ai-button:active { transform: scale(0.9); }
+        #ai-button img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        
+        /* Finestra chat che appare sopra il bottone */
+        #ai-window { 
+            display: none; 
+            margin-bottom: 15px; 
+            width: 85vw; 
+            max-width: 300px; 
+            background: var(--card); 
+            border: 1px solid var(--accent); 
+            border-radius: 20px; 
+            padding: 15px; 
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8); 
+            backdrop-filter: blur(10px); 
+            animation: slideUp 0.3s ease; 
+        }
+        
+        .ai-header { color: var(--accent); font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; font-size: 14px; }
+        #ai-content { max-height: 250px; overflow-y: auto; margin-bottom: 10px; font-size: 13px; color: var(--text); line-height: 1.5; }
+        .ai-input-area { display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
+        #ai-input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 10px; font-size: 13px; outline: none; }
+        #ai-send-btn { background: var(--accent); border: none; border-radius: 8px; padding: 0 15px; cursor: pointer; font-weight: bold; color: #000; font-size: 12px; text-transform: uppercase; }
+        
+        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 
@@ -54,14 +94,14 @@
             <a href="https://re-panza.github.io/ricerca_giocatori/" class="tool-card">
                 <div class="icon-box">🔍</div>
                 <div class="tool-info">
-                    <b>Ricerca Giocatori & Inattivi</b>
+                    <b>Ricerca Giocatori</b>
                     <span>Trova tutti i castelli di un giocatore incollando il suo profilo.</span>
                 </div>
             </a>
             <a href="https://re-panza.github.io/calcolo-partenze/" class="tool-card">
                 <div class="icon-box">🎯</div>
                 <div class="tool-info">
-                    <b>Calcola Partenze Attaccanti</b>
+                    <b>Calcola Partenze</b>
                     <span>Scannerizza i link L&K e calcola gli orari di partenza.</span>
                 </div>
             </a>
@@ -69,14 +109,14 @@
                 <div class="icon-box">💰</div>
                 <div class="tool-info">
                     <b>Calcolo Argento</b>
-                    <span>Calcola la quantità di argento necessaria per conquistare i tuoi target.</span>
+                    <span>Calcola la quantità di argento necessaria per conquistare i target.</span>
                 </div>
             </a>
             <a href="https://re-panza.github.io/self_trick/" class="tool-card">
                 <div class="icon-box">🛡️</div>
                 <div class="tool-info">
                     <b>Self Trick</b>
-                    <span>Calcola i tempi perfetti per il Self Trickle e copri i tuoi turni difensivi.</span>
+                    <span>Calcola i tempi perfetti per coprire i tuoi turni difensivi.</span>
                 </div>
             </a>
         </div>
@@ -89,26 +129,28 @@
         </footer>
     </div>
 
-    <div id="ai-assistant-container">
+    <div id="ai-assistant-wrapper">
         <div id="ai-window">
             <div class="ai-header">
                 <span>👑 Assistente Re Panza</span>
-                <span onclick="toggleAI()" style="cursor:pointer">×</span>
+                <span onclick="toggleAI()" style="cursor:pointer; padding:0 5px;">×</span>
             </div>
             <div id="ai-content">
                 <p>Ciao! Sono Re Panza. Chiedimi pure consiglio per la tua conquista.</p>
             </div>
             <div class="ai-input-area">
-                <input type="text" id="ai-input" placeholder="Scrivi al Re...">
-                <button id="ai-send-btn" onclick="chiediAlRe()">Invia</button>
+                <input type="text" id="ai-input" placeholder="Scrivi al Re..." autocomplete="off">
+                <button id="ai-send-btn" onclick="chiediAlRe()">➤</button>
             </div>
         </div>
+        
         <div id="ai-button" onclick="toggleAI()">
-            <img src="https://re-panza.github.io/lk_tool/re-panza-ai.png" alt="Re Panza AI">
+            <img src="https://re-panza.github.io/lk_tool/re-panza-ai.png" onerror="this.src='https://re-panza.github.io/lk_tool/icona.png'" alt="Re Panza AI">
         </div>
     </div>
 
     <script src="https://re-panza.github.io/lk_tool/common.js"></script>
+    
     <script src="https://re-panza.github.io/re-panza-core/re_panza_brain.js"></script>
 
     <script>
@@ -118,6 +160,3 @@
     </script>
 </body>
 </html>
-
-
-
