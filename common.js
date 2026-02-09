@@ -110,9 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? APP_NEWS 
                     : "Miglioramenti generali.";
                 
+                // Ritardo lungo per aspettare la intro lenta
                 setTimeout(() => {
                     showToast(`🎉 Aggiornato alla v${APP_VERSION}!\n${newsText}`);
-                }, 1500); 
+                }, 4500); 
                 
                 localStorage.setItem('lk_tool_version', APP_VERSION);
                 return; 
@@ -181,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 /* =========================================
-   7. LIVE INTRO ANIMATION (Re Panza a DX)
+   7. LIVE INTRO ANIMATION (Re Panza Gigante + Slow Motion)
    ========================================= */
 (function() {
     const INTRO_IMAGE = 're_panza_intro.png'; 
@@ -198,13 +199,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function runLiveIntro() {
-        // 1. Stile Iniziale Pagina (Nascosta in basso e piccola)
+        // 1. Stile Iniziale Pagina (LENTISSIMO)
         const style = document.createElement('style');
         style.innerHTML = `
             body {
-                transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 2.0s ease;
-                transform-origin: center 50vh; /* Centro schermo */
-                transform: scale(0.6) translateY(50px); /* Piccola e un po' in basso */
+                /* Durata 4 secondi per zoom e opacità */
+                transition: transform 4.0s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 3.5s ease;
+                transform-origin: center 50vh; 
+                transform: scale(0.6) translateY(50px);
                 opacity: 0;
                 overflow: hidden;
             }
@@ -223,48 +225,57 @@ document.addEventListener('DOMContentLoaded', () => {
             background: #0f172a; 
             z-index: 999999;
             display: flex; flex-direction: column;
-            align-items: flex-end; /* <--- SPOSTATO A DESTRA */
-            justify-content: center;
-            padding-right: 30px; /* Margine dal bordo destro */
-            transition: background-color 2.0s ease;
+            align-items: center; /* Centrato orizzontalmente */
+            justify-content: center; /* Centrato verticalmente */
+            transition: background-color 3.5s ease; /* Sfondo svanisce lento */
         `;
 
-        // 3. Contenuto Re Panza (FERMO IMMOBILE, POSIZIONATO A DX)
+        // 3. Contenuto Re Panza (FERMO e GIGANTE)
         const contentBox = document.createElement('div');
         contentBox.style.cssText = `
             text-align: center;
-            transition: opacity 1.5s ease-in; 
+            width: 100%;
+            transition: opacity 3.0s ease-in; /* Svanisce lentamente */
             opacity: 1;
         `;
         
+        // Immagine impostata per essere GRANDE (80% altezza schermo)
         contentBox.innerHTML = `
             <img src="${INTRO_IMAGE}" 
                  onerror="this.src='icona.png'" 
-                 style="width: 240px; max-width: 50vw; drop-shadow: 0 0 40px rgba(96,165,250,0.5); margin-bottom: 20px;">
+                 style="
+                    height: 80vh; /* Occupa 80% altezza schermo */
+                    width: auto;
+                    max-width: 95vw;
+                    object-fit: contain;
+                    drop-shadow: 0 0 50px rgba(96,165,250,0.4); 
+                    margin-bottom: 0;
+                 ">
             
             <h2 style="
-                color: #fbbf24; font-family: system-ui; font-size: 26px; 
-                margin: 0; text-transform: uppercase; letter-spacing: 3px;
-                text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+                position: absolute; bottom: 5vh; width: 100%; left: 0;
+                color: #fbbf24; font-family: system-ui; font-size: 24px; 
+                margin: 0; text-transform: uppercase; letter-spacing: 4px;
+                text-shadow: 0 4px 20px rgba(0,0,0,0.9);
             ">Benvenuto</h2>
         `;
 
         overlay.appendChild(contentBox);
         document.body.appendChild(overlay);
 
-        // --- SEQUENZA TEMPORALE ---
+        // --- SEQUENZA TEMPORALE (LENTA) ---
         setTimeout(() => {
             
-            // 1. La Home sale e si ingrandisce
+            // 1. La Home sale e si ingrandisce (parte l'animazione body)
             document.body.classList.add('intro-zoom-active');
 
             // 2. Lo sfondo diventa trasparente
             overlay.style.backgroundColor = 'rgba(15, 23, 42, 0)'; 
 
-            // 3. Re Panza svanisce sul posto
+            // 3. Re Panza svanisce sul posto (SENZA MUOVERSI)
             contentBox.style.opacity = '0';
 
-            // Pulizia finale
+            // Pulizia finale dopo 4.2 secondi
             setTimeout(() => {
                 overlay.remove();
                 document.body.style.overflow = '';
@@ -272,8 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.style.transform = '';
                 document.body.style.opacity = '';
                 sessionStorage.setItem('lk_intro_played', 'true');
-            }, 2600);
+            }, 4200);
 
-        }, 500);
+        }, 200); // Pausa minima iniziale
     }
 })();
