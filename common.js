@@ -198,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function runLiveIntro() {
-        // NOTA: I CSS dell'Intro hanno la precedenza sulle transizioni normali
         const style = document.createElement('style');
         style.innerHTML = `
             body {
@@ -283,31 +282,46 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 /* =========================================
-   8. PAGE TRANSITIONS (ISTANTANEE)
+   8. TRANSIAZIONE PAGINE (Elegante & Istantanea)
    ========================================= */
 (function() {
-    // Applichiamo l'animazione solo se l'Intro NON sta girando in questo momento.
-    // Altrimenti le due animazioni (FadeIn vs Intro Zoom) vanno in conflitto.
-    
-    // Controlla se abbiamo già visto l'intro
+    // 1. Controlla se dobbiamo riprodurre l'Intro
+    const path = window.location.pathname;
+    const isHome = path.endsWith('/') || path.includes('index.html') || path.includes('homepage');
     const hasSeenIntro = sessionStorage.getItem('lk_intro_played');
-    
-    // Se l'abbiamo già vista, siamo in navigazione normale -> Attiva FadeIn Veloce
-    if (hasSeenIntro) {
-        const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes fadeInFast {
-                0% { opacity: 0; transform: translateY(5px); }
-                100% { opacity: 1; transform: translateY(0); }
-            }
-            body {
-                /* 0.3s è molto veloce, non si nota ritardo ma toglie lo scatto */
-                animation: fadeInFast 0.3s ease-out backwards;
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    // NOTA: Abbiamo RIMOSSO il listener sui click.
-    // Ora il click è istantaneo (nativo del browser).
+    const isIntroActive = isHome && !hasSeenIntro;
+
+    // Se l'intro è attiva, NON fare nulla qui (l'intro gestisce la sua animazione)
+    if (isIntroActive) return;
+
+    // 2. Inietta Stili per l'entrata morbida
+    const style = document.createElement('style');
+    style.textContent = `
+        /* La pagina nasce leggermente spostata e invisibile */
+        @keyframes softEntry {
+            from { opacity: 0; transform: translateY(15px) scale(0.99); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        /* Applica l'animazione al body */
+        body {
+            animation: softEntry 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 3. Hack per Safari/iOS "Tasto Indietro" (Back-Forward Cache)
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            // Riavvia l'animazione se torniamo indietro dalla cache
+            document.body.style.animation = 'none';
+            requestAnimationFrame(() => {
+                document.body.style.animation = 'softEntry 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards';
+            });
+        }
+    });
+
+    // 4. (Opzionale) Se vuoi che l'uscita sia comunque un minimo percepita senza ritardi
+    // Lasciamo che il click sia istantaneo, l'animazione è solo IN ENTRATA.
+    // È il metodo più fluido percepito dall'utente.
 })();
