@@ -22,7 +22,7 @@ function getDist(x1, y1, x2, y2) {
     return Math.max(Math.abs(cx1 - cx2), Math.abs(cy1 - cy2), Math.abs(cz1 - cz2));
 }
 
-// --- 2. PARSING LINK COORDINATE ---
+// --- 2. PARSING LINK COORDINATE (Legacy) ---
 function parseLKLink(url) {
     let m = url.match(/coordinates\?(\d+),(\d+)&(\d+)/);
     if (!m) return null;
@@ -170,3 +170,25 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(div);
     }
 })();
+
+// --- 9. HELPER HABITAT ---
+function getHabitatInfo(t) {
+    // t = 0 (Castello), 1 (Castello), 2 (Fortezza), 4 (Città), >4 (Metro)
+    if (t === 2) return { type: 'fortezza', icon: '🏰', label: 'Fortezza' };
+    if (t === 4) return { type: 'citta', icon: '🏙️', label: 'Città' };
+    if (t > 4) return { type: 'metro', icon: '🏛️', label: 'Metropoli' };
+    return { type: 'castello', icon: '🛖', label: 'Castello' };
+}
+
+// --- 10. PARSING AVANZATO (Player + Coord) ---
+function parseInputLink(url) {
+    // Cerca giocatore: l+k://player?123&327
+    let mPlayer = url.match(/player\?(\d+)&(\d+)/);
+    if (mPlayer) return { type: 'player', id: parseInt(mPlayer[1]), w: mPlayer[2] };
+
+    // Cerca coordinate: l+k://coordinates?111,222&327
+    let mCoord = url.match(/coordinates\?(\d+),(\d+)&(\d+)/);
+    if (mCoord) return { type: 'coord', x: parseInt(mCoord[1]), y: parseInt(mCoord[2]), w: mCoord[3] };
+
+    return null;
+}
