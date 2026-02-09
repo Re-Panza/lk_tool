@@ -118,59 +118,57 @@
     </script>
 
     <script>
-      // 1. QUESTA È LA TUA VERSIONE LOCALE (DENTRO L'APK)
-      const VERSIONE_INSTALLATA = '9.8'; 
+    // Recupera la versione salvata nel browser
+    const currentSavedVersion = localStorage.getItem('lk_tool_version');
 
-      // 2. CONTROLLO AUTOMATICO
-      window.addEventListener('load', function() {
-          if (typeof APP_VERSION !== 'undefined') {
-              console.log("Versione APK:", VERSIONE_INSTALLATA);
-              console.log("Versione GitHub:", APP_VERSION);
+    // APP_VERSION viene caricata dal file version.js in alto
+    // Se APP_VERSION esiste ed è diversa da quella salvata...
+    if (typeof APP_VERSION !== 'undefined' && APP_VERSION !== currentSavedVersion) {
+        
+        // Se è la prima volta che entriamo, salviamola e basta
+        if (!currentSavedVersion) {
+            localStorage.setItem('lk_tool_version', APP_VERSION);
+        } else {
+            // Altrimenti, c'è un aggiornamento vero! Mostra il banner.
+            mostraBannerPWA(APP_VERSION);
+        }
+    }
 
-              if (APP_VERSION !== VERSIONE_INSTALLATA) {
-                  mostraBannerUpdate(APP_VERSION);
-              }
-          }
-      });
+    function mostraBannerPWA(newVer) {
+        const div = document.createElement('div');
+        div.style.cssText = `
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px;
+            background: rgba(16, 185, 129, 0.95); /* Verde PWA */
+            border: 1px solid #34d399;
+            border-radius: 12px;
+            color: white; padding: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer;
+            animation: slideUp 0.5s ease-out;
+        `;
+        
+        div.innerHTML = `
+            <div style="flex:1">
+                <div style="font-weight:bold; font-size:14px;">🚀 Aggiornamento ${newVer}</div>
+                <div style="font-size:12px; opacity:0.9;">Tocca per ricaricare le novità</div>
+            </div>
+            <div style="font-size:20px;">↻</div>
+        `;
 
-      function mostraBannerUpdate(nuovaVer) {
-          const div = document.createElement('div');
-          div.style.cssText = `
-              position: fixed; bottom: 0; left: 0; width: 100%;
-              background: rgba(15, 23, 42, 0.98); border-top: 2px solid #fbbf24;
-              color: white; padding: 25px 20px; text-align: center; z-index: 10000;
-              box-shadow: 0 -10px 40px rgba(0,0,0,0.8); backdrop-filter: blur(10px);
-              animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-              font-family: sans-serif;
-          `;
-          
-          // LINK GENERICO (lo aggiornerai quando hai il link del Drive/Dropbox)
-          const linkDownload = "#"; 
-
-          div.innerHTML = `
-              <h3 style="margin:0 0 10px 0; color:#fbbf24; text-transform:uppercase; letter-spacing:1px;">
-                 🚀 Aggiornamento Disponibile!
-              </h3>
-              <p style="font-size:14px; margin-bottom:20px; color:#cbd5e1; line-height:1.5;">
-                 La tua versione: <b style="color:#ef4444">${VERSIONE_INSTALLATA}</b><br>
-                 Nuova versione: <b style="color:#34d399">${nuovaVer}</b>
-              </p>
-              <a href="${linkDownload}" target="_blank" style="
-                  background: #fbbf24; color: #0f172a; text-decoration: none;
-                  padding: 12px 30px; border-radius: 50px; font-weight: 800; font-size:14px;
-                  display: inline-block; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
-                  text-transform: uppercase;
-              ">Scarica Ora</a>
-              
-              <div onclick="this.parentElement.remove()" style="
-                  margin-top: 15px; font-size: 11px; color: #64748b; cursor: pointer; 
-                  text-decoration: underline; text-transform: uppercase; letter-spacing: 0.5px;
-              ">Chiudi e usa versione vecchia</div>
-          `;
-          
-          document.body.appendChild(div);
-      }
-    </script>
+        // Al click: salva la nuova versione e ricarica forzatamente
+        div.onclick = function() {
+            localStorage.setItem('lk_tool_version', newVer);
+            window.location.reload(true);
+        };
+        
+        document.body.appendChild(div);
+    }
+</script>
 </body>
 </html>
+
 
