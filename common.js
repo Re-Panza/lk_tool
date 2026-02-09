@@ -283,75 +283,31 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 /* =========================================
-   8. PAGE TRANSITIONS (Navigazione Fluida)
+   8. PAGE TRANSITIONS (ISTANTANEE)
    ========================================= */
 (function() {
-    // 1. Inietta Stili CSS per le transizioni standard
-    const style = document.createElement('style');
-    style.innerHTML = `
-        /* Stato di base (transizione pronta) */
-        body {
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-        /* Quando si ESCE dalla pagina */
-        body.page-exit-active {
-            opacity: 0;
-            transform: scale(0.96); /* Zoom indietro leggero */
-            pointer-events: none;
-        }
-        /* Quando si ENTRA (se non c'è l'intro) */
-        body.page-enter-active {
-            animation: fadeInPage 0.5s ease-out forwards;
-        }
-        @keyframes fadeInPage {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-    `;
-    document.head.appendChild(style);
-
-    // 2. Animazione Entrata (Solo se NON c'è l'intro attiva)
-    window.addEventListener('pageshow', function(event) {
-        // Se la pagina viene caricata dalla cache (tasto indietro), rimuovi classe exit
-        if (event.persisted) {
-            document.body.classList.remove('page-exit-active');
-        }
-        
-        const isIntroPlaying = document.getElementById('intro-overlay');
-        if (!isIntroPlaying) {
-            document.body.classList.add('page-enter-active');
-        }
-    });
-
-    // 3. Gestione Click sui Link (Animazione Uscita)
-    document.addEventListener('DOMContentLoaded', () => {
-        // Seleziona tutti i link della pagina
-        const links = document.querySelectorAll('a');
-        
-        links.forEach(link => {
-            link.addEventListener('click', function(e) {
-                const targetUrl = this.href;
-                
-                // Ignora: link vuoti, ancore interne (#), link esterni o target blank
-                if (!targetUrl || 
-                    targetUrl.startsWith('#') || 
-                    this.target === '_blank' || 
-                    targetUrl.includes('javascript:') ||
-                    this.getAttribute('onclick')) return;
-
-                // Controlla se è un link interno (stesso dominio)
-                if (targetUrl.includes(window.location.hostname)) {
-                    e.preventDefault(); // Ferma il caricamento immediato
-                    
-                    // Attiva animazione di uscita
-                    document.body.classList.add('page-exit-active');
-
-                    // Aspetta la fine dell'animazione (400ms) poi vai
-                    setTimeout(() => {
-                        window.location.href = targetUrl;
-                    }, 400);
-                }
-            });
-        });
-    });
+    // Applichiamo l'animazione solo se l'Intro NON sta girando in questo momento.
+    // Altrimenti le due animazioni (FadeIn vs Intro Zoom) vanno in conflitto.
+    
+    // Controlla se abbiamo già visto l'intro
+    const hasSeenIntro = sessionStorage.getItem('lk_intro_played');
+    
+    // Se l'abbiamo già vista, siamo in navigazione normale -> Attiva FadeIn Veloce
+    if (hasSeenIntro) {
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fadeInFast {
+                0% { opacity: 0; transform: translateY(5px); }
+                100% { opacity: 1; transform: translateY(0); }
+            }
+            body {
+                /* 0.3s è molto veloce, non si nota ritardo ma toglie lo scatto */
+                animation: fadeInFast 0.3s ease-out backwards;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // NOTA: Abbiamo RIMOSSO il listener sui click.
+    // Ora il click è istantaneo (nativo del browser).
 })();
