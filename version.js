@@ -1,5 +1,6 @@
-const APP_VERSION = '12.1';
+const APP_VERSION = '12.2';
 const APP_NEWS = 'upgrade self trick';
+
 
 
 
