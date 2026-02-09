@@ -1,4 +1,5 @@
-const APP_VERSION = '10.1';
+const APP_VERSION = '10.2';
+const APP_NEWS = '';
 
 
 
