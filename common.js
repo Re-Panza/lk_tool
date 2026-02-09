@@ -1,5 +1,5 @@
 /* L&K Tools - Common Functions 
-   Gestisce: AI, Toast Notifications, Clipboard, Utility, Math, PWA Updates, Intro Animation
+   Gestisce: AI, Toast Notifications, Clipboard, Utility, Math, PWA Updates, Intro Animation, Page Transitions
 */
 
 // --- 1. CALCOLO DISTANZA ESAGONALE ---
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 setTimeout(() => {
                     showToast(`🎉 Aggiornato alla v${APP_VERSION}!\n${newsText}`);
-                }, 4500); // Ritardo lungo per non sovrapporsi all'intro
+                }, 4500); 
                 
                 localStorage.setItem('lk_tool_version', APP_VERSION);
                 return; 
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
    ========================================= */
 (function() {
     const INTRO_IMAGE = 're_panza_intro.png'; 
-    const FORCE_INTRO = false; // Metti 'true' per testare sempre
+    const FORCE_INTRO = false; 
 
     window.addEventListener('load', function() {
         const hasSeen = sessionStorage.getItem('lk_intro_played');
@@ -198,14 +198,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function runLiveIntro() {
-        // 1. Stile Iniziale Pagina (LONTANISSIMA)
+        // NOTA: I CSS dell'Intro hanno la precedenza sulle transizioni normali
         const style = document.createElement('style');
         style.innerHTML = `
             body {
-                /* Durata 4 secondi: parte piccolissima e arriva normale */
                 transition: transform 4.0s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 3.5s ease;
                 transform-origin: center 50vh; 
-                transform: scale(0.35); /* MOLTO PICCOLA inizialmente */
+                transform: scale(0.35); 
                 opacity: 0;
                 overflow: hidden;
             }
@@ -216,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         document.head.appendChild(style);
 
-        // 2. Overlay Sfondo
         const overlay = document.createElement('div');
         overlay.id = 'intro-overlay';
         overlay.style.cssText = `
@@ -224,36 +222,34 @@ document.addEventListener('DOMContentLoaded', () => {
             background: #0f172a; 
             z-index: 999999;
             display: flex; flex-direction: column;
-            align-items: flex-end; /* TUTTO A DESTRA */
-            justify-content: flex-end; /* Allineato in basso/centro */
+            align-items: flex-end; 
+            justify-content: flex-end; 
             padding-bottom: 0;
             transition: background-color 3.5s ease;
         `;
 
-        // 3. Contenuto Re Panza (FERMO e ENORME)
         const contentBox = document.createElement('div');
         contentBox.style.cssText = `
             text-align: right;
             width: 100%;
             height: 100%;
             display: flex;
-            align-items: flex-end; /* Immagine poggia sul fondo */
-            justify-content: flex-end; /* Immagine a destra */
-            transition: opacity 3.0s ease-in; /* Solo fade out */
+            align-items: flex-end; 
+            justify-content: flex-end; 
+            transition: opacity 3.0s ease-in; 
             opacity: 1;
         `;
         
-        // Immagine impostata per essere GIGANTE A DESTRA
         contentBox.innerHTML = `
             <img src="${INTRO_IMAGE}" 
                  onerror="this.src='icona.png'" 
                  style="
-                    height: 90vh; /* QUASI TUTTO LO SCHERMO */
+                    height: 90vh; 
                     width: auto;
                     max-width: 80vw;
                     object-fit: contain;
                     drop-shadow: -10px 0 50px rgba(96,165,250,0.3); 
-                    margin-right: -20px; /* Leggermente fuori bordo per effetto cinema */
+                    margin-right: -20px; 
                  ">
             
             <h2 style="
@@ -268,19 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.appendChild(contentBox);
         document.body.appendChild(overlay);
 
-        // --- SEQUENZA TEMPORALE ---
         setTimeout(() => {
-            
-            // 1. La Home sale (Zoom In profondo)
             document.body.classList.add('intro-zoom-active');
-
-            // 2. Lo sfondo diventa trasparente
             overlay.style.backgroundColor = 'rgba(15, 23, 42, 0)'; 
-
-            // 3. Re Panza svanisce sul posto (IMMOBILE)
             contentBox.style.opacity = '0';
 
-            // Pulizia finale
             setTimeout(() => {
                 overlay.remove();
                 document.body.style.overflow = '';
@@ -292,4 +280,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
         }, 200);
     }
+})();
+
+/* =========================================
+   8. PAGE TRANSITIONS (Navigazione Fluida)
+   ========================================= */
+(function() {
+    // 1. Inietta Stili CSS per le transizioni standard
+    const style = document.createElement('style');
+    style.innerHTML = `
+        /* Stato di base (transizione pronta) */
+        body {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        /* Quando si ESCE dalla pagina */
+        body.page-exit-active {
+            opacity: 0;
+            transform: scale(0.96); /* Zoom indietro leggero */
+            pointer-events: none;
+        }
+        /* Quando si ENTRA (se non c'è l'intro) */
+        body.page-enter-active {
+            animation: fadeInPage 0.5s ease-out forwards;
+        }
+        @keyframes fadeInPage {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 2. Animazione Entrata (Solo se NON c'è l'intro attiva)
+    window.addEventListener('pageshow', function(event) {
+        // Se la pagina viene caricata dalla cache (tasto indietro), rimuovi classe exit
+        if (event.persisted) {
+            document.body.classList.remove('page-exit-active');
+        }
+        
+        const isIntroPlaying = document.getElementById('intro-overlay');
+        if (!isIntroPlaying) {
+            document.body.classList.add('page-enter-active');
+        }
+    });
+
+    // 3. Gestione Click sui Link (Animazione Uscita)
+    document.addEventListener('DOMContentLoaded', () => {
+        // Seleziona tutti i link della pagina
+        const links = document.querySelectorAll('a');
+        
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const targetUrl = this.href;
+                
+                // Ignora: link vuoti, ancore interne (#), link esterni o target blank
+                if (!targetUrl || 
+                    targetUrl.startsWith('#') || 
+                    this.target === '_blank' || 
+                    targetUrl.includes('javascript:') ||
+                    this.getAttribute('onclick')) return;
+
+                // Controlla se è un link interno (stesso dominio)
+                if (targetUrl.includes(window.location.hostname)) {
+                    e.preventDefault(); // Ferma il caricamento immediato
+                    
+                    // Attiva animazione di uscita
+                    document.body.classList.add('page-exit-active');
+
+                    // Aspetta la fine dell'animazione (400ms) poi vai
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 400);
+                }
+            });
+        });
+    });
 })();
