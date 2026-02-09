@@ -1,5 +1,6 @@
-const APP_VERSION = '11.5';
+const APP_VERSION = '11.6';
 const APP_NEWS = 'walter è gay';
+
 
 
 
