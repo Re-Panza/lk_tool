@@ -116,59 +116,8 @@
             window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
         }
     </script>
-
-    <script>
-    // Recupera la versione salvata nel browser
-    const currentSavedVersion = localStorage.getItem('lk_tool_version');
-
-    // APP_VERSION viene caricata dal file version.js in alto
-    // Se APP_VERSION esiste ed è diversa da quella salvata...
-    if (typeof APP_VERSION !== 'undefined' && APP_VERSION !== currentSavedVersion) {
-        
-        // Se è la prima volta che entriamo, salviamola e basta
-        if (!currentSavedVersion) {
-            localStorage.setItem('lk_tool_version', APP_VERSION);
-        } else {
-            // Altrimenti, c'è un aggiornamento vero! Mostra il banner.
-            mostraBannerPWA(APP_VERSION);
-        }
-    }
-
-    function mostraBannerPWA(newVer) {
-        const div = document.createElement('div');
-        div.style.cssText = `
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 400px;
-            background: rgba(16, 185, 129, 0.95); /* Verde PWA */
-            border: 1px solid #34d399;
-            border-radius: 12px;
-            color: white; padding: 16px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            backdrop-filter: blur(5px);
-            z-index: 10000;
-            display: flex; align-items: center; justify-content: space-between;
-            cursor: pointer;
-            animation: slideUp 0.5s ease-out;
-        `;
-        
-        div.innerHTML = `
-            <div style="flex:1">
-                <div style="font-weight:bold; font-size:14px;">🚀 Aggiornamento ${newVer}</div>
-                <div style="font-size:12px; opacity:0.9;">Tocca per ricaricare le novità</div>
-            </div>
-            <div style="font-size:20px;">↻</div>
-        `;
-
-        // Al click: salva la nuova versione e ricarica forzatamente
-        div.onclick = function() {
-            localStorage.setItem('lk_tool_version', newVer);
-            window.location.reload(true);
-        };
-        
-        document.body.appendChild(div);
-    }
-</script>
 </body>
 </html>
+
 
 
