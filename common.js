@@ -47,7 +47,7 @@ function showToast(msg) {
         pointerEvents: 'none',
         opacity: '0',
         transition: 'opacity 0.3s, transform 0.3s',
-        whiteSpace: 'pre-line', // Permette di andare a capo con \n
+        whiteSpace: 'pre-line', 
         textAlign: 'center',
         maxWidth: '90%'
     });
@@ -62,7 +62,7 @@ function showToast(msg) {
         t.style.opacity = '0';
         t.style.transform = 'translate(-50%, 0)';
         setTimeout(() => t.remove(), 300);
-    }, 4000); // 4 secondi per leggere bene
+    }, 4000); 
 }
 
 // --- 4. CLIPBOARD & UTILITY ---
@@ -97,13 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
 (function() {
     const currentSavedVersion = localStorage.getItem('lk_tool_version');
     const path = window.location.pathname;
-    // Identifica se siamo in Homepage
     const isHomePage = path.endsWith('/') || path.includes('index.html') || path.includes('homepage');
 
     window.addEventListener('load', function() {
         if (typeof APP_VERSION !== 'undefined') {
             
-            // A) DOPO L'AGGIORNAMENTO: Mostra le novità
+            // A) DOPO L'AGGIORNAMENTO
             if (localStorage.getItem('lk_tool_just_updated') === 'true') {
                 localStorage.removeItem('lk_tool_just_updated');
                 
@@ -113,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 setTimeout(() => {
                     showToast(`🎉 Aggiornato alla v${APP_VERSION}!\n${newsText}`);
-                }, 1000); // Aspetta che finisca l'intro
+                }, 1500); 
                 
                 localStorage.setItem('lk_tool_version', APP_VERSION);
                 return; 
@@ -124,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('lk_tool_version', APP_VERSION);
             } 
             else if (APP_VERSION !== currentSavedVersion) {
-                // Mostra banner SOLO in Home
                 if (isHomePage) {
                     _mostraBannerAggiornamento(APP_VERSION);
                 }
@@ -183,10 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 /* =========================================
-   7. LIVE INTRO ANIMATION (Re Panza + Zoom)
+   7. LIVE INTRO ANIMATION (Re Panza a DX)
    ========================================= */
 (function() {
-    // Configurazione Immagine
     const INTRO_IMAGE = 're_panza_intro.png'; 
     const FORCE_INTRO = false; // Metti 'true' per testare sempre
 
@@ -195,31 +192,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const path = window.location.pathname;
         const isHome = path.endsWith('/') || path.includes('index.html') || path.includes('homepage');
 
-        // Esegue l'intro solo in Home e solo una volta per sessione
         if ((!hasSeen || FORCE_INTRO) && isHome) {
             runLiveIntro();
         }
     });
 
     function runLiveIntro() {
-        // Stile per lo zoom della pagina sottostante
+        // 1. Stile Iniziale Pagina (Nascosta in basso e piccola)
         const style = document.createElement('style');
         style.innerHTML = `
             body {
-                transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1), opacity 1.2s ease;
-                transform-origin: center 30vh;
-                transform: scale(0.6);
+                transition: transform 2.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 2.0s ease;
+                transform-origin: center 50vh; /* Centro schermo */
+                transform: scale(0.6) translateY(50px); /* Piccola e un po' in basso */
                 opacity: 0;
                 overflow: hidden;
             }
             body.intro-zoom-active {
-                transform: scale(1);
+                transform: scale(1) translateY(0);
                 opacity: 1;
             }
         `;
         document.head.appendChild(style);
 
-        // Overlay scuro
+        // 2. Overlay Sfondo
         const overlay = document.createElement('div');
         overlay.id = 'intro-overlay';
         overlay.style.cssText = `
@@ -227,50 +223,57 @@ document.addEventListener('DOMContentLoaded', () => {
             background: #0f172a; 
             z-index: 999999;
             display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            transition: opacity 0.8s ease;
+            align-items: flex-end; /* <--- SPOSTATO A DESTRA */
+            justify-content: center;
+            padding-right: 30px; /* Margine dal bordo destro */
+            transition: background-color 2.0s ease;
         `;
 
-        // Contenuto Overlay (Re Panza)
-        overlay.innerHTML = `
-            <div style="text-align:center; animation: float 3s ease-in-out infinite;">
-                <img src="${INTRO_IMAGE}" 
-                     onerror="this.src='icona.png'" 
-                     style="width: 220px; max-width: 60%; drop-shadow: 0 0 30px rgba(96,165,250,0.6); margin-bottom: 20px;">
-                
-                <h2 style="
-                    color: #fbbf24; font-family: system-ui; font-size: 24px; 
-                    margin: 0; text-transform: uppercase; letter-spacing: 2px;
-                    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-                ">Benvenuto al Castello!</h2>
-                
-                <p style="color: #94a3b8; margin-top: 10px; font-size: 14px;">Preparazione sala di guerra...</p>
-            </div>
-            <style>
-                @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
-            </style>
+        // 3. Contenuto Re Panza (FERMO IMMOBILE, POSIZIONATO A DX)
+        const contentBox = document.createElement('div');
+        contentBox.style.cssText = `
+            text-align: center;
+            transition: opacity 1.5s ease-in; 
+            opacity: 1;
+        `;
+        
+        contentBox.innerHTML = `
+            <img src="${INTRO_IMAGE}" 
+                 onerror="this.src='icona.png'" 
+                 style="width: 240px; max-width: 50vw; drop-shadow: 0 0 40px rgba(96,165,250,0.5); margin-bottom: 20px;">
+            
+            <h2 style="
+                color: #fbbf24; font-family: system-ui; font-size: 26px; 
+                margin: 0; text-transform: uppercase; letter-spacing: 3px;
+                text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            ">Benvenuto</h2>
         `;
 
+        overlay.appendChild(contentBox);
         document.body.appendChild(overlay);
 
-        // Sequenza temporale
+        // --- SEQUENZA TEMPORALE ---
         setTimeout(() => {
-            // 1.8s: Via overlay, Zoom pagina
-            setTimeout(() => {
-                overlay.style.opacity = '0';
-                document.body.classList.add('intro-zoom-active');
-                
-                // Pulizia finale
-                setTimeout(() => {
-                    overlay.remove();
-                    document.body.style.overflow = '';
-                    style.remove();
-                    document.body.style.transform = '';
-                    document.body.style.opacity = '';
-                    sessionStorage.setItem('lk_intro_played', 'true');
-                }, 1000);
+            
+            // 1. La Home sale e si ingrandisce
+            document.body.classList.add('intro-zoom-active');
 
-            }, 1800); 
-        }, 100);
+            // 2. Lo sfondo diventa trasparente
+            overlay.style.backgroundColor = 'rgba(15, 23, 42, 0)'; 
+
+            // 3. Re Panza svanisce sul posto
+            contentBox.style.opacity = '0';
+
+            // Pulizia finale
+            setTimeout(() => {
+                overlay.remove();
+                document.body.style.overflow = '';
+                style.remove();
+                document.body.style.transform = '';
+                document.body.style.opacity = '';
+                sessionStorage.setItem('lk_intro_played', 'true');
+            }, 2600);
+
+        }, 500);
     }
 })();
