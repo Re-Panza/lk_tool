@@ -1,5 +1,6 @@
-const APP_VERSION = '12.2';
-const APP_NEWS = 'upgrade self trick';
+const APP_VERSION = '12.3';
+const APP_NEWS = 'aggiunto mondo italia V regioni';
+
 
 
 
