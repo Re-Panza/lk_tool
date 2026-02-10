@@ -211,7 +211,6 @@ function createSponsorOverlay() {
             <img src="${ASSETS_CONFIG.sponsorImg}" style="width: auto; max-width: 100%; max-height: 55vh; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); margin-bottom: 20px; display: block;">
             <p style="margin-bottom: 20px; color: #94a3b8; font-size: 14px; line-height: 1.4;">I server costano e il Re ha sete.<br>Offri un caffè per mantenere il tool attivo!</p>
             <a href="${ASSETS_CONFIG.paypalUrl}" target="_blank" style="display: block; width: 100%; padding: 16px; background: #0070ba; color: #fff; text-decoration: none; font-weight: 800; border-radius: 50px; box-shadow: 0 4px 20px rgba(0, 112, 186, 0.5); text-transform: uppercase; letter-spacing: 1px; font-size: 15px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">☕ Offrimi un Caffè</a>
-            // <div onclick="activateVip()" style="margin-top: 15px; font-size: 12px; color: #fbbf24; text-decoration: underline; cursor: pointer; opacity: 0.8;">Hai già donato? Inserisci Codice VIP</div>
         </div>
         <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background: rgba(255,255,255,0.1);"><div id="sponsor-progress" style="width: 0%; height: 100%; background: #fbbf24; transition: width 1s linear;"></div></div>
     `;
