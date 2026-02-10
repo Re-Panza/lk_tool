@@ -1,11 +1,11 @@
 /* L&K Tools - Common Functions 
    Gestisce: AI, Toast, Clipboard, Utility, Math, Aggiornamenti PWA
-   PLUS: Sponsor Interstitial (Pubblicità Re Panza)
+   PLUS: Sponsor Interstitial (Pubblicità Re Panza) - Mobile Optimized
 */
 
 // --- CONFIGURAZIONE SPONSOR ---
 const SPONSOR_CONFIG = {
-    // URL dell'immagine (preso dal tuo repo)
+    // URL dell'immagine
     imgUrl: 'https://re-panza.github.io/lk_tool/repanzapubli.png', 
     paypalUrl: 'https://paypal.me/Longo11',
     duration: 10000 // 10 secondi
@@ -166,7 +166,7 @@ function createSponsorOverlay() {
 
     const overlay = document.createElement('div');
     overlay.id = 'sponsor-overlay';
-    // Stile Overlay a schermo intero
+    // Stile Overlay Fullscreen
     overlay.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(15, 23, 42, 0.98); z-index: 100000;
@@ -175,42 +175,74 @@ function createSponsorOverlay() {
     `;
 
     overlay.innerHTML = `
-        <div style="position: relative; max-width: 90%; width: 400px; padding: 25px; 
-                    border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 24px; 
-                    background: rgba(17, 28, 51, 0.95); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+        <div style="
+            position: relative; 
+            width: 90%; 
+            max-width: 380px; 
+            max-height: 90vh;
+            padding: 20px; 
+            border: 1px solid rgba(251, 191, 36, 0.3); 
+            border-radius: 20px; 
+            background: rgba(17, 28, 51, 0.95); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+        ">
             
             <div id="sponsor-counter-box" style="
-                position: absolute; top: 15px; right: 15px;
-                width: 32px; height: 32px; border-radius: 50%;
+                position: absolute; top: 10px; right: 10px;
+                width: 36px; height: 36px; border-radius: 50%;
                 background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
                 display: flex; align-items: center; justify-content: center;
                 font-size: 14px; font-weight: bold; color: #fbbf24;
+                z-index: 2;
             ">10</div>
 
             <div id="sponsor-close-btn" style="
-                position: absolute; top: 15px; right: 15px;
-                width: 32px; height: 32px; border-radius: 50%;
+                position: absolute; top: 10px; right: 10px;
+                width: 40px; height: 40px; border-radius: 50%;
                 background: #fbbf24; color: #000; cursor: pointer;
                 display: none; align-items: center; justify-content: center;
-                font-size: 18px; font-weight: bold; box-shadow: 0 0 10px rgba(251,191,36,0.5);
+                font-size: 22px; font-weight: bold; box-shadow: 0 0 15px rgba(251,191,36,0.6);
+                z-index: 3;
             ">✕</div>
 
-            <h2 style="color: #fbbf24; margin: 0 0 15px 0; font-size: 22px; text-transform: uppercase;">
+            <h2 style="color: #fbbf24; margin: 5px 0 15px 0; font-size: 20px; text-transform: uppercase; font-weight: 800;">
                 Supporta il Re! 👑
             </h2>
             
-            <div style="width: 100%; height: 250px; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 20px; border: 2px solid #334155;">
-                <img src="${SPONSOR_CONFIG.imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+            <div style="
+                width: 100%; 
+                height: 250px; /* Altezza fissa di base */
+                max-height: 40vh; /* Max 40% altezza schermo per mobile */
+                background: #000; 
+                border-radius: 12px; 
+                margin-bottom: 15px; 
+                border: 2px solid #334155;
+                display: flex; 
+                align-items: center; 
+                justify-content: center;
+                overflow: hidden;
+            ">
+                <img src="${SPONSOR_CONFIG.imgUrl}" style="
+                    width: 100%; 
+                    height: 100%; 
+                    object-fit: contain; /* FONDAMENTALE: Mostra immagine intera */
+                ">
             </div>
 
-            <p style="margin-bottom: 20px; color: #94a3b8; font-size: 13px; line-height: 1.4;">
+            <p style="margin-bottom: 15px; color: #94a3b8; font-size: 13px; line-height: 1.4;">
                 I server costano e il Re ha sete.<br>Offri un caffè per mantenere il tool attivo!
             </p>
 
             <a href="${SPONSOR_CONFIG.paypalUrl}" target="_blank" style="
-                display: block; width: 100%; padding: 14px; background: #0070ba; color: #fff; 
+                display: block; width: 100%; padding: 14px; 
+                background: #0070ba; color: #fff; 
                 text-decoration: none; font-weight: 800; border-radius: 12px; 
-                box-shadow: 0 4px 15px rgba(0, 112, 186, 0.4); text-transform: uppercase; letter-spacing: 0.5px;
+                box-shadow: 0 4px 15px rgba(0, 112, 186, 0.4); 
+                text-transform: uppercase; letter-spacing: 0.5px;
+                font-size: 14px;
                 transition: transform 0.2s;
             " onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
                 ☕ Offrimi un Caffè
