@@ -1,10 +1,17 @@
 /* L&K Tools - Common Functions 
-   Gestisce: AI, Toast, Clipboard, Utility, Math.
-   PLUS: Gestione Aggiornamenti (SOLO SU SMARTPHONE)
+   Gestisce: AI, Toast, Clipboard, Utility, Math, Aggiornamenti PWA
+   PLUS: Sponsor Interstitial (Pubblicità Re Panza)
 */
 
+// --- CONFIGURAZIONE SPONSOR ---
+const SPONSOR_CONFIG = {
+    // URL dell'immagine (preso dal tuo repo)
+    imgUrl: 'https://re-panza.github.io/lk_tool/repanzapubli.png', 
+    paypalUrl: 'https://paypal.me/Longo11',
+    duration: 10000 // 10 secondi
+};
+
 // --- 0. RILEVATORE DISPOSITIVO ---
-// Ritorna TRUE se siamo su smartphone, FALSE se siamo su PC
 const isMobileDevice = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
 };
@@ -22,14 +29,14 @@ function getDist(x1, y1, x2, y2) {
     return Math.max(Math.abs(cx1 - cx2), Math.abs(cy1 - cy2), Math.abs(cz1 - cz2));
 }
 
-// --- 2. PARSING LINK COORDINATE (Legacy) ---
+// --- 2. PARSING LINK COORDINATE ---
 function parseLKLink(url) {
     let m = url.match(/coordinates\?(\d+),(\d+)&(\d+)/);
     if (!m) return null;
     return { x: parseInt(m[1]), y: parseInt(m[2]), w: m[3] };
 }
 
-// --- 3. TOAST MESSAGE (Notifiche a scomparsa) ---
+// --- 3. TOAST MESSAGE ---
 function showToast(msg) {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
@@ -80,10 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* =========================================
-   6. GESTORE AGGIORNAMENTI PWA (Solo Smartphone)
+   6. GESTORE AGGIORNAMENTI PWA
    ========================================= */
 (function() {
-    // SE SIAMO SU PC, USCIAMO SUBITO DALLA FUNZIONE (Nessun banner)
     if (!isMobileDevice()) return; 
 
     const currentSavedVersion = localStorage.getItem('lk_tool_version');
@@ -92,103 +98,188 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('load', function() {
         if (typeof APP_VERSION !== 'undefined') {
-            
-            // A) DOPO L'AGGIORNAMENTO: Mostra le novità
             if (localStorage.getItem('lk_tool_just_updated') === 'true') {
                 localStorage.removeItem('lk_tool_just_updated');
-                
-                const newsText = (typeof APP_NEWS !== 'undefined' && APP_NEWS) 
-                    ? APP_NEWS 
-                    : "Miglioramenti generali.";
-                
-                // Mostra il toast di conferma
-                setTimeout(() => {
-                    showToast(`🎉 Aggiornato alla v${APP_VERSION}!\n${newsText}`);
-                }, 500);
-                
+                const newsText = (typeof APP_NEWS !== 'undefined' && APP_NEWS) ? APP_NEWS : "Miglioramenti generali.";
+                setTimeout(() => { showToast(`🎉 Aggiornato alla v${APP_VERSION}!\n${newsText}`); }, 500);
                 localStorage.setItem('lk_tool_version', APP_VERSION);
                 return; 
             }
-
-            // B) CONTROLLO NUOVA VERSIONE
             if (!currentSavedVersion) {
                 localStorage.setItem('lk_tool_version', APP_VERSION);
-            } 
-            else if (APP_VERSION !== currentSavedVersion) {
-                // Mostra banner SOLO in Home
-                if (isHomePage) {
-                    _mostraBannerAggiornamento(APP_VERSION);
-                }
+            } else if (APP_VERSION !== currentSavedVersion && isHomePage) {
+                _mostraBannerAggiornamento(APP_VERSION);
             }
         }
     });
 
     function _mostraBannerAggiornamento(newVer) {
         if (document.getElementById('pwa-update-banner')) return;
-
         const div = document.createElement('div');
         div.id = 'pwa-update-banner';
         div.style.cssText = `
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px;
-            background: rgba(16, 185, 129, 0.98); /* Verde Smeraldo */
-            border: 2px solid #fff;
-            border-radius: 16px;
-            color: white; 
-            padding: 16px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
-            z-index: 99999;
-            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            background: rgba(16, 185, 129, 0.98); border: 2px solid #fff; border-radius: 16px;
+            color: white; padding: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); 
+            z-index: 99999; display: flex; align-items: center; justify-content: space-between; gap: 10px;
             font-family: sans-serif; cursor: pointer;
         `;
-        
         div.innerHTML = `
             <div style="flex:1; text-align:left;">
-                <div style="font-weight:800; font-size:15px; text-transform:uppercase; letter-spacing:0.5px;">
-                    🚀 Update v${newVer}
-                </div>
-                <div style="font-size:12px; opacity:0.95; margin-top:2px;">
-                    Nuova versione disponibile.
-                </div>
+                <div style="font-weight:800; font-size:15px;">🚀 Update v${newVer}</div>
+                <div style="font-size:12px; opacity:0.95;">Nuova versione disponibile.</div>
             </div>
-            <button id="btnReloadPWA" style="
-                background: #fff; color: #10b981; border: none; 
-                padding: 8px 16px; border-radius: 50px; 
-                font-weight: 800; font-size: 13px; cursor: pointer;
-                text-transform: uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            ">
-                AGGIORNA
-            </button>
+            <button style="background: #fff; color: #10b981; border: none; padding: 8px 16px; border-radius: 50px; font-weight: 800; font-size: 13px;">AGGIORNA</button>
         `;
-
         div.onclick = function() {
             localStorage.setItem('lk_tool_version', newVer);
             localStorage.setItem('lk_tool_just_updated', 'true');
             window.location.reload();
         };
-        
         document.body.appendChild(div);
     }
 })();
 
 // --- 9. HELPER HABITAT ---
 function getHabitatInfo(t) {
-    // t = 0 (Castello), 1 (Castello), 2 (Fortezza), 4 (Città), >4 (Metro)
     if (t === 2) return { type: 'fortezza', icon: '🏰', label: 'Fortezza' };
     if (t === 4) return { type: 'citta', icon: '🏙️', label: 'Città' };
     if (t > 4) return { type: 'metro', icon: '🏛️', label: 'Metropoli' };
     return { type: 'castello', icon: '🛖', label: 'Castello' };
 }
 
-// --- 10. PARSING AVANZATO (Player + Coord) ---
+// --- 10. PARSING AVANZATO ---
 function parseInputLink(url) {
-    // Cerca giocatore: l+k://player?123&327
     let mPlayer = url.match(/player\?(\d+)&(\d+)/);
     if (mPlayer) return { type: 'player', id: parseInt(mPlayer[1]), w: mPlayer[2] };
-
-    // Cerca coordinate: l+k://coordinates?111,222&327
     let mCoord = url.match(/coordinates\?(\d+),(\d+)&(\d+)/);
     if (mCoord) return { type: 'coord', x: parseInt(mCoord[1]), y: parseInt(mCoord[2]), w: mCoord[3] };
-
     return null;
 }
+
+/* =========================================
+   11. SISTEMA SPONSOR RE PANZA (Interstitial)
+   ========================================= */
+function createSponsorOverlay() {
+    if (document.getElementById('sponsor-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'sponsor-overlay';
+    // Stile Overlay a schermo intero
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.98); z-index: 100000;
+        display: none; flex-direction: column; align-items: center; justify-content: center;
+        color: #fff; text-align: center; backdrop-filter: blur(10px);
+    `;
+
+    overlay.innerHTML = `
+        <div style="position: relative; max-width: 90%; width: 400px; padding: 25px; 
+                    border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 24px; 
+                    background: rgba(17, 28, 51, 0.95); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+            
+            <div id="sponsor-counter-box" style="
+                position: absolute; top: 15px; right: 15px;
+                width: 32px; height: 32px; border-radius: 50%;
+                background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                display: flex; align-items: center; justify-content: center;
+                font-size: 14px; font-weight: bold; color: #fbbf24;
+            ">10</div>
+
+            <div id="sponsor-close-btn" style="
+                position: absolute; top: 15px; right: 15px;
+                width: 32px; height: 32px; border-radius: 50%;
+                background: #fbbf24; color: #000; cursor: pointer;
+                display: none; align-items: center; justify-content: center;
+                font-size: 18px; font-weight: bold; box-shadow: 0 0 10px rgba(251,191,36,0.5);
+            ">✕</div>
+
+            <h2 style="color: #fbbf24; margin: 0 0 15px 0; font-size: 22px; text-transform: uppercase;">
+                Supporta il Re! 👑
+            </h2>
+            
+            <div style="width: 100%; height: 250px; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 20px; border: 2px solid #334155;">
+                <img src="${SPONSOR_CONFIG.imgUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+
+            <p style="margin-bottom: 20px; color: #94a3b8; font-size: 13px; line-height: 1.4;">
+                I server costano e il Re ha sete.<br>Offri un caffè per mantenere il tool attivo!
+            </p>
+
+            <a href="${SPONSOR_CONFIG.paypalUrl}" target="_blank" style="
+                display: block; width: 100%; padding: 14px; background: #0070ba; color: #fff; 
+                text-decoration: none; font-weight: 800; border-radius: 12px; 
+                box-shadow: 0 4px 15px rgba(0, 112, 186, 0.4); text-transform: uppercase; letter-spacing: 0.5px;
+                transition: transform 0.2s;
+            " onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+                ☕ Offrimi un Caffè
+            </a>
+        </div>
+
+        <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background: rgba(255,255,255,0.1);">
+            <div id="sponsor-progress" style="width: 0%; height: 100%; background: #fbbf24; transition: width 1s linear;"></div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+window.runWithSponsor = function(callback) {
+    createSponsorOverlay();
+    
+    const overlay = document.getElementById('sponsor-overlay');
+    const countBox = document.getElementById('sponsor-counter-box');
+    const closeBtn = document.getElementById('sponsor-close-btn');
+    const progress = document.getElementById('sponsor-progress');
+    
+    // Reset stato
+    let seconds = SPONSOR_CONFIG.duration / 1000;
+    countBox.innerText = seconds;
+    countBox.style.display = 'flex';
+    closeBtn.style.display = 'none';
+    progress.style.width = '0%';
+    progress.style.transition = `width ${seconds}s linear`;
+    
+    overlay.style.display = 'flex';
+
+    // Avvia animazione barra
+    requestAnimationFrame(() => {
+        progress.style.width = '100%';
+    });
+
+    const timer = setInterval(() => {
+        seconds--;
+        countBox.innerText = seconds;
+
+        if (seconds <= 0) {
+            clearInterval(timer);
+            // Fine timer: mostra la X
+            countBox.style.display = 'none';
+            closeBtn.style.display = 'flex';
+            
+            // L'utente deve cliccare la X per procedere
+            closeBtn.onclick = function() {
+                overlay.style.display = 'none';
+                if (callback) callback();
+            };
+        }
+    }, 1000);
+};
+
+// Intercetta automaticamente TUTTI i link di navigazione
+document.addEventListener('DOMContentLoaded', () => {
+    createSponsorOverlay(); // Pre-load HTML
+    
+    document.querySelectorAll('a').forEach(link => {
+        const href = link.getAttribute('href');
+        // Filtra link interni/esterni sicuri
+        if (!href || href.startsWith('#') || href.includes('javascript') || href.includes('paypal') || link.target === '_blank') return;
+        
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.runWithSponsor(() => {
+                window.location.href = href;
+            });
+        });
+    });
+});
