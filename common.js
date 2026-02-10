@@ -1,19 +1,19 @@
 /* L&K Tools - Common Functions 
    Include: AI, Toast, Clipboard, Utility, Math, Aggiornamenti PWA
    PLUS: Sponsor Interstitial (Pubblicità Re Panza)
-   PLUS: Intro Splash Screen (Caricamento Finto con Cosciotto)
+   PLUS: Intro Splash Screen (Full Screen + Cosciotto)
 */
 
 // --- CONFIGURAZIONE ASSETS ---
 const ASSETS_CONFIG = {
-    // Immagine Pubblicità (Sponsor)
+    // Immagine Pubblicità
     sponsorImg: 'https://re-panza.github.io/lk_tool/repanzapubli.png',
-    // Immagine Intro (Splash Screen) - Nota: %20 sostituisce gli spazi
+    // Immagine Intro (Full Screen)
     introImg: 'https://re-panza.github.io/lk_tool/re%20panza%20intro.png',
     
     paypalUrl: 'https://paypal.me/Longo11',
     sponsorDuration: 10000, // 10 secondi pubblicità
-    introDuration: 3500     // 3.5 secondi intro
+    introDuration: 5000     // 5 secondi intro (RALLENTATO)
 };
 
 // --- LISTA CODICI VIP ---
@@ -95,56 +95,69 @@ function activateVip() {
 }
 
 /* =========================================
-   INTRO SPLASH SCREEN (Caricamento Finto)
+   INTRO SPLASH SCREEN (Full Screen + Chicken)
    ========================================= */
 function runIntro() {
-    // Controlla se l'intro è già stata mostrata in questa sessione
+    // Se vuoi vederla ogni volta, rimuovi il controllo if sotto
     if (sessionStorage.getItem('repanza_intro_shown')) return;
 
     const intro = document.createElement('div');
     intro.id = 're-panza-intro';
     intro.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: #0f172a; z-index: 200000;
+        background: #000; z-index: 200000;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        transition: opacity 0.5s ease;
+        transition: opacity 0.8s ease;
+        overflow: hidden;
     `;
 
     intro.innerHTML = `
-        <div style="flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; padding: 20px;">
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;">
             <img src="${ASSETS_CONFIG.introImg}" style="
-                max-width: 90%; max-height: 60vh; 
-                object-fit: contain; 
-                filter: drop-shadow(0 0 20px rgba(96, 165, 250, 0.3));
-                animation: floatIntro 3s ease-in-out infinite;
+                width: 100%; height: 100%; 
+                object-fit: cover; /* Copre tutto lo schermo senza bordi */
+                object-position: center;
+                opacity: 0.9;
             ">
         </div>
 
-        <div style="color: #94a3b8; font-family: monospace; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px;">
-            Caricamento Risorse...
-        </div>
+        <div style="
+            position: absolute; bottom: 40px; left: 10%; width: 80%; 
+            z-index: 10; display: flex; flex-direction: column; align-items: center;
+        ">
+            <div style="
+                color: #fbbf24; font-family: monospace; font-size: 16px; margin-bottom: 15px; 
+                text-transform: uppercase; letter-spacing: 3px; font-weight: bold;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            ">
+                Caricamento...
+            </div>
 
-        <div style="position: relative; width: 100%; height: 8px; background: rgba(255,255,255,0.1);">
-            <div id="intro-bar" style="
-                width: 0%; height: 100%; 
-                background: linear-gradient(90deg, #fbbf24, #f59e0b);
-                box-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
-                transition: width ${ASSETS_CONFIG.introDuration}ms cubic-bezier(0.2, 1, 0.3, 1);
-            "></div>
-            
-            <div id="intro-chicken" style="
-                position: absolute; top: -28px; left: 0%; 
-                font-size: 24px; 
-                transition: left ${ASSETS_CONFIG.introDuration}ms cubic-bezier(0.2, 1, 0.3, 1);
-                transform: translateX(-50%) rotate(20deg);
-                filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
-            ">🍗</div>
+            <div style="position: relative; width: 100%; height: 10px; background: rgba(255,255,255,0.2); border-radius: 5px; border: 1px solid rgba(255,255,255,0.3);">
+                
+                <div id="intro-bar" style="
+                    width: 0%; height: 100%; 
+                    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+                    border-radius: 5px;
+                    box-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+                    transition: width ${ASSETS_CONFIG.introDuration}ms linear;
+                "></div>
+                
+                <div id="intro-chicken" style="
+                    position: absolute; top: -35px; left: 0%; 
+                    font-size: 32px; 
+                    transition: left ${ASSETS_CONFIG.introDuration}ms linear;
+                    transform: translateX(-50%) rotate(15deg);
+                    filter: drop-shadow(0 5px 5px rgba(0,0,0,0.8));
+                    animation: bounceChicken 0.5s infinite alternate;
+                ">🍗</div>
+            </div>
         </div>
         
         <style>
-            @keyframes floatIntro {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-10px); }
+            @keyframes bounceChicken {
+                from { transform: translateX(-50%) rotate(15deg) translateY(0); }
+                to { transform: translateX(-50%) rotate(25deg) translateY(-5px); }
             }
         </style>
     `;
@@ -153,12 +166,15 @@ function runIntro() {
 
     // Avvia Animazione
     requestAnimationFrame(() => {
-        const bar = document.getElementById('intro-bar');
-        const chicken = document.getElementById('intro-chicken');
-        if (bar && chicken) {
-            bar.style.width = '100%';
-            chicken.style.left = '100%';
-        }
+        // Piccolo timeout per assicurare che il rendering sia pronto
+        setTimeout(() => {
+            const bar = document.getElementById('intro-bar');
+            const chicken = document.getElementById('intro-chicken');
+            if (bar && chicken) {
+                bar.style.width = '100%';
+                chicken.style.left = '100%';
+            }
+        }, 100);
     });
 
     // Rimuovi dopo durata
@@ -166,13 +182,13 @@ function runIntro() {
         intro.style.opacity = '0';
         setTimeout(() => {
             intro.remove();
-            sessionStorage.setItem('repanza_intro_shown', 'true'); // Segna come visto per questa sessione
-        }, 500);
+            sessionStorage.setItem('repanza_intro_shown', 'true');
+        }, 800); // Tempo per il fade out
     }, ASSETS_CONFIG.introDuration);
 }
 
 /* =========================================
-   SPONSOR INTERSTITIAL (Pubblicità)
+   SPONSOR INTERSTITIAL (Clean Full Image)
    ========================================= */
 function createSponsorOverlay() {
     if (document.getElementById('sponsor-overlay')) return;
@@ -217,6 +233,7 @@ window.runWithSponsor = function(callback) {
     closeBtn.style.display = 'none';
     progress.style.width = '0%';
     progress.style.transition = `width ${seconds}s linear`;
+    
     overlay.style.display = 'flex';
 
     requestAnimationFrame(() => { progress.style.width = '100%'; });
@@ -255,42 +272,41 @@ window.runWithSponsor = function(callback) {
             if (!currentSavedVersion) {
                 localStorage.setItem('lk_tool_version', APP_VERSION);
             } else if (APP_VERSION !== currentSavedVersion && isHomePage) {
-                // Banner Aggiornamento PWA
-                if (!document.getElementById('pwa-update-banner')) {
-                    const div = document.createElement('div');
-                    div.id = 'pwa-update-banner';
-                    div.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(16, 185, 129, 0.98); border: 2px solid #fff; border-radius: 16px; color: white; padding: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 99999; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: sans-serif; cursor: pointer;';
-                    div.innerHTML = `<div style="flex:1; text-align:left;"><div style="font-weight:800; font-size:15px;">🚀 Update v${APP_VERSION}</div><div style="font-size:12px; opacity:0.95;">Nuova versione disponibile.</div></div><button style="background: #fff; color: #10b981; border: none; padding: 8px 16px; border-radius: 50px; font-weight: 800; font-size: 13px;">AGGIORNA</button>`;
-                    div.onclick = function() {
-                        localStorage.setItem('lk_tool_version', APP_VERSION);
-                        localStorage.setItem('lk_tool_just_updated', 'true');
-                        window.location.reload();
-                    };
-                    document.body.appendChild(div);
-                }
+                _mostraBannerAggiornamento(APP_VERSION);
             }
         }
     });
+
+    function _mostraBannerAggiornamento(newVer) {
+        if (document.getElementById('pwa-update-banner')) return;
+        const div = document.createElement('div');
+        div.id = 'pwa-update-banner';
+        div.style.cssText = `position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(16, 185, 129, 0.98); border: 2px solid #fff; border-radius: 16px; color: white; padding: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 99999; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: sans-serif; cursor: pointer;`;
+        div.innerHTML = `<div style="flex:1; text-align:left;"><div style="font-weight:800; font-size:15px;">🚀 Update v${newVer}</div><div style="font-size:12px; opacity:0.95;">Nuova versione disponibile.</div></div><button style="background: #fff; color: #10b981; border: none; padding: 8px 16px; border-radius: 50px; font-weight: 800; font-size: 13px;">AGGIORNA</button>`;
+        div.onclick = function() {
+            localStorage.setItem('lk_tool_version', newVer);
+            localStorage.setItem('lk_tool_just_updated', 'true');
+            window.location.reload();
+        };
+        document.body.appendChild(div);
+    }
 })();
 
-// --- INIT GENERALE (Link + Intro) ---
+// --- INIT GENERALE ---
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Avvia l'Intro (solo se serve)
+    // 1. Avvia l'Intro
     runIntro();
 
-    // 2. Prepara la pubblicità (preload)
+    // 2. Prepara la pubblicità
     createSponsorOverlay(); 
     
-    // 3. Intercetta Link di navigazione
+    // 3. Intercetta Link
     document.querySelectorAll('a').forEach(link => {
         const href = link.getAttribute('href');
         if (!href || href.startsWith('#') || href.includes('javascript') || href.includes('paypal') || link.target === '_blank') return;
-        
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            window.runWithSponsor(() => {
-                window.location.href = href;
-            });
+            window.runWithSponsor(() => { window.location.href = href; });
         });
     });
 });
