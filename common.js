@@ -1,6 +1,6 @@
 /* L&K Tools - Common Functions 
    Include: AI, Toast, Clipboard, Utility, Math, PWA
-   PLUS: Blocco PC con QR Code
+   PLUS: Blocco PC con QR Code (Bypassabile con ?dev=true)
    PLUS: Sponsor & Gioco Cosciotto + Gattini (Versione Caos)
    PLUS: Classifica Online Intelligente
 */
@@ -8,10 +8,12 @@
 // --- 0. RILEVATORE DISPOSITIVO ---
 const isMobileDevice = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
 
-// --- 🛑 BLOCCO PC CON QR CODE AUTOMATICO 🛑 ---
-if (!isMobileDevice()) {
+// --- 🛑 BLOCCO PC CON QR CODE (E BYPASS) 🛑 ---
+// Per entrare da PC usa: tuo-sito.html?dev=true
+const isDevMode = () => window.location.href.includes('?dev=true');
+
+if (!isMobileDevice() && !isDevMode()) {
     document.addEventListener("DOMContentLoaded", function() {
-        // Genera QR Code dell'URL corrente
         const currentUrl = window.location.href;
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=fbbf24&bgcolor=0f172a&data=${encodeURIComponent(currentUrl)}`;
         
@@ -34,8 +36,7 @@ if (!isMobileDevice()) {
             </div>
         `;
     });
-    // Blocca l'esecuzione del resto
-    throw new Error("Accesso da PC bloccato. Passare a mobile.");
+    throw new Error("Accesso da PC bloccato. Usa ?dev=true per bypassare.");
 }
 
 // --- CONFIGURAZIONE ASSETS ---
@@ -165,14 +166,18 @@ let gameTimeInterval = null;
 let currentGameCallback = null;
 
 function shouldShowAd() {
-    // 1. VIP check
-    if (isUserVip()) return false;
-    // 2. Home check
+    // 1. VIP e Dev Mode saltano
+    if (isUserVip() || isDevMode()) return false;
+    
+    // 2. Solo Mobile (ridondante col blocco, ma sicurezza in più)
+    if (!isMobileDevice()) return false;
+
+    // 3. Home check
     const p = window.location.pathname;
     const isHome = p.endsWith('/') || p.endsWith('index.html') || p.includes('lk_tool'); 
     if (!isHome) return false; 
     
-    // 3. Cooldown 5 Minuti
+    // 4. Cooldown 5 Minuti
     const lastAdTime = parseInt(localStorage.getItem('repanza_last_ad_time') || 0);
     if (Date.now() - lastAdTime < ASSETS_CONFIG.adCooldown) return false;
     
