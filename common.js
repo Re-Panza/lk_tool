@@ -1,7 +1,7 @@
 /* L&K Tools - Common Functions 
    Include: AI, Toast, Clipboard, Utility, Math, PWA
-   PLUS: Sponsor & Gioco Cosciotto
-   PLUS: CLASSIFICA ONLINE (Google Sheets Backend)
+   PLUS: Sponsor & Gioco Cosciotto (Mobile Only)
+   PLUS: Classifica Online Intelligente
 */
 
 // --- CONFIGURAZIONE ASSETS ---
@@ -14,7 +14,7 @@ const ASSETS_CONFIG = {
     
     sponsorDuration: 10000, 
     introDuration: 5000,    
-    adCooldown: 60000       
+    adCooldown: 300000 // 5 MINUTI (300.000 ms)
 };
 
 const VIP_CODES = ['REPANZA-KING', 'CAFFE-PAGATO', 'VIP-2025'];
@@ -29,24 +29,18 @@ function getDist(x1, y1, x2, y2) {
     return Math.max(Math.abs(cx1-cx2), Math.abs(cy1-cy2), Math.abs(cz1-cz2));
 }
 
-// --- 2. PARSING (RECUPERATO!) ---
-// Questa funzione mancava e faceva bloccare tutto
+// --- 2. PARSING ---
 function parseInputLink(url) {
     if (!url) return null;
-    // Cerca Link Giocatore
     let mPlayer = url.match(/player\?(\d+)&(\d+)/);
     if (mPlayer) return { type: 'player', id: parseInt(mPlayer[1]), w: mPlayer[2] };
-    // Cerca Link Coordinate
     let mCoord = url.match(/coordinates\?(\d+),(\d+)&(\d+)/);
     if (mCoord) return { type: 'coord', x: parseInt(mCoord[1]), y: parseInt(mCoord[2]), w: mCoord[3] };
     return null;
 }
-
-// Legacy support
 function parseLKLink(url) { return parseInputLink(url); }
 
-// --- 3. HELPER HABITAT (RECUPERATO!) ---
-// Serve per capire se è Città, Fortezza, ecc.
+// --- 3. HELPER HABITAT ---
 function getHabitatInfo(t) {
     if (t === 2) return { type: 'fortezza', icon: '🏰', label: 'Fortezza' };
     if (t === 4) return { type: 'citta', icon: '🏙️', label: 'Città' };
@@ -60,18 +54,19 @@ function copyToClipboard(text) {
 }
 function pad(n) { return n < 10 ? '0' + n : n; }
 
-function showToast(msg) {
+function showToast(msg, isBad=false) {
     const ex = document.querySelector('.toast'); if(ex) ex.remove();
     let t = document.createElement("div"); t.className = "toast"; t.innerText = msg;
+    let bg = isBad ? 'rgba(239, 68, 68, 0.95)' : 'rgba(52, 211, 153, 0.95)';
     Object.assign(t.style, {
         position:'fixed', bottom:'90px', left:'50%', transform:'translateX(-50%)',
-        background:'rgba(52, 211, 153, 0.95)', color:'#000', padding:'12px 24px',
+        background: bg, color:'#000', padding:'12px 24px',
         borderRadius:'50px', fontWeight:'bold', zIndex:'10000', pointerEvents:'none',
         transition:'0.3s', opacity:'0'
     });
     document.body.appendChild(t);
     requestAnimationFrame(() => t.style.opacity='1');
-    setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
+    setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 2000);
 }
 
 // --- 5. VIP & AI ---
@@ -112,7 +107,7 @@ async function fetchLeaderboard() {
         const res = await fetch(ASSETS_CONFIG.dbUrl);
         const data = await res.json();
         return Array.isArray(data) ? data : fallbackLeaderboard();
-    } catch (e) { console.error("Err DB:", e); return fallbackLeaderboard(); }
+    } catch (e) { return fallbackLeaderboard(); }
 }
 
 async function saveScoreToDB(name, score) {
@@ -123,7 +118,7 @@ async function saveScoreToDB(name, score) {
         const res = await fetch(url, { method: 'POST' });
         const data = await res.json();
         return Array.isArray(data) ? data : fallbackLeaderboard();
-    } catch (e) { console.error("Err Save:", e); return fallbackLeaderboard(); }
+    } catch (e) { return fallbackLeaderboard(); }
 }
 
 function fallbackLeaderboard() {
@@ -131,7 +126,7 @@ function fallbackLeaderboard() {
 }
 
 /* =========================================
-   MINIGIOCO & SPONSOR
+   MINIGIOCO & SPONSOR (MOBILE ONLY)
    ========================================= */
 let gameScore = 0;
 let gameInterval = null;
@@ -139,12 +134,18 @@ let gameTimeInterval = null;
 let currentGameCallback = null;
 
 function shouldShowAd() {
+    // 1. Solo Mobile
+    if (!isMobileDevice()) return false;
+    // 2. VIP check
     if (isUserVip()) return false;
+    // 3. Home check
     const p = window.location.pathname;
     const isHome = p.endsWith('/') || p.endsWith('index.html') || p.includes('lk_tool'); 
     if (!isHome) return false; 
+    // 4. Cooldown 5 minuti
     const lastAdTime = parseInt(localStorage.getItem('repanza_last_ad_time') || 0);
     if (Date.now() - lastAdTime < ASSETS_CONFIG.adCooldown) return false;
+    
     localStorage.setItem('repanza_last_ad_time', Date.now());
     return true;
 }
@@ -160,16 +161,17 @@ function createGameOverlay() {
             <div style="color: #fff; font-weight: 800; font-size: 18px; font-family: sans-serif;">PUNTI: <span id="game-score" style="color: #34d399; font-size: 22px;">0</span></div>
         </div>
         <div id="game-bg-content" style="text-align: center; opacity: 0.4; pointer-events: none; transform: scale(0.9); transition: opacity 0.5s;">
-            <h2 style="color: #fbbf24; margin-bottom: 10px;">IN ATTESA DEL CALCOLO...</h2>
+            <h2 style="color: #fbbf24; margin-bottom: 10px;">ATTESA...</h2>
             <img src="${ASSETS_CONFIG.sponsorImg}" style="max-height: 30vh; border-radius: 12px;">
-            <p style="color: #ccc; margin-top: 10px;">Acchiappa i cosciotti! 🍗</p>
+            <p style="color: #ccc; margin-top: 10px;">Evita i gatti 🐱!<br>Prendi i cosciotti 🍗!</p>
         </div>
         <a href="${ASSETS_CONFIG.paypalUrl}" target="_blank" style="position: absolute; bottom: 80px; z-index: 20; padding: 12px 24px; background: #0070ba; color: #fff; text-decoration: none; font-weight: bold; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-family: sans-serif; text-transform: uppercase; font-size: 14px;">☕ Offrimi un Caffè</a>
         <div id="game-close-btn" style="position: absolute; bottom: 20px; z-index: 30; width: 50px; height: 50px; border-radius: 50%; background: #fbbf24; color: #000; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; box-shadow: 0 0 20px rgba(251,191,36,0.8); animation: pulseBtn 1s infinite;">✕</div>
         <div id="game-field" style="position: absolute; top: 60px; bottom: 100px; left: 0; right: 0; z-index: 5;"></div>
+        
         <div id="leaderboard-panel" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 350px; background: #1e293b; border: 2px solid #fbbf24; border-radius: 20px; padding: 20px; z-index: 50; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
-            <h2 style="color:#fbbf24; margin:0 0 15px 0;">🏆 CLASSIFICA GLOBALE</h2>
-            <div id="lb-loading" style="color:#94a3b8; font-size:12px; display:none;">Connessione al Re...</div>
+            <h2 style="color:#fbbf24; margin:0 0 15px 0;">🏆 CLASSIFICA</h2>
+            <div id="lb-loading" style="color:#94a3b8; font-size:12px; display:none;">Salvataggio...</div>
             <div id="new-record-input" style="display:none; margin-bottom:15px;">
                 <p style="color:#fff; font-size:14px;">NUOVO RECORD: <b id="final-score-val" style="color:#34d399"></b></p>
                 <input type="text" id="player-name" placeholder="Il tuo nome..." maxlength="12" style="padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; width: 60%; text-align: center; font-weight: bold;">
@@ -179,75 +181,159 @@ function createGameOverlay() {
             <button id="close-lb-btn" style="width: 100%; padding: 12px; background: #fbbf24; color: #000; font-weight: 800; border: none; border-radius: 10px; cursor: pointer; text-transform: uppercase;">CONTINUA ▶</button>
         </div>
         <style>
-            .chicken-target { position: absolute; font-size: 40px; cursor: pointer; animation: popIn 0.3s ease-out; }
-            .chicken-target:active { transform: scale(0.8); }
+            .game-item { position: absolute; font-size: 40px; cursor: pointer; animation: popIn 0.3s ease-out; user-select: none; }
+            .game-item:active { transform: scale(0.8); }
             @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-            .score-float { position: absolute; color: #34d399; font-weight: bold; font-size: 20px; pointer-events: none; animation: floatUp 0.8s forwards; }
+            .score-float { position: absolute; font-weight: bold; font-size: 24px; pointer-events: none; animation: floatUp 0.8s forwards; z-index: 20; }
             @keyframes floatUp { to { transform: translateY(-50px); opacity: 0; } }
             .lb-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #334155; color: #cbd5e1; }
             .lb-row:first-child { color: #fbbf24; font-weight: bold; font-size: 1.1em; } 
             .lb-row:nth-child(2) { color: #e2e8f0; font-weight: bold; } 
             .lb-row:nth-child(3) { color: #b45309; font-weight: bold; } 
-            @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+            @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+            .shaking { animation: shake 0.3s; border: 2px solid red; }
         </style>
     `;
     document.body.appendChild(overlay);
 }
 
-function spawnChicken() {
+// Genera oggetti (Cosciotti o Gattini)
+function spawnGameItem() {
     const field = document.getElementById('game-field'); if (!field) return;
-    const chicken = document.createElement('div'); chicken.className = 'chicken-target'; chicken.innerText = '🍗';
-    chicken.style.left = (Math.random() * 80 + 10) + '%'; chicken.style.top = (Math.random() * 80 + 10) + '%';
-    chicken.onclick = function(e) {
-        e.stopPropagation(); gameScore++; document.getElementById('game-score').innerText = gameScore;
-        const float = document.createElement('div'); float.className = 'score-float'; float.innerText = '+1';
-        float.style.left = chicken.style.left; float.style.top = chicken.style.top; field.appendChild(float); setTimeout(() => float.remove(), 800);
-        if(navigator.vibrate) navigator.vibrate(50); chicken.remove();
+    
+    // Decidi cosa generare: 80% pollo, 20% gatto
+    const isKitten = Math.random() < 0.2;
+    const item = document.createElement('div'); 
+    item.className = 'game-item'; 
+    item.innerText = isKitten ? '🐱' : '🍗';
+    
+    // Posizione Random
+    item.style.left = (Math.random() * 80 + 10) + '%'; 
+    item.style.top = (Math.random() * 70 + 10) + '%'; // Evita troppo in basso (bottone paypal)
+
+    item.onclick = function(e) {
+        e.stopPropagation();
+        
+        const float = document.createElement('div');
+        float.className = 'score-float';
+        float.style.left = item.style.left; 
+        float.style.top = item.style.top;
+        field.appendChild(float); 
+        setTimeout(() => float.remove(), 800);
+
+        if (isKitten) {
+            // MALUS GATTO
+            gameScore = Math.max(0, gameScore - 1);
+            float.innerText = '-1';
+            float.style.color = '#ef4444'; // Rosso
+            document.getElementById('sponsor-overlay').classList.add('shaking');
+            setTimeout(() => document.getElementById('sponsor-overlay').classList.remove('shaking'), 300);
+            if(navigator.vibrate) navigator.vibrate([100, 50, 100]); // Vibrazione forte
+        } else {
+            // BONUS POLLO
+            gameScore++;
+            float.innerText = '+1';
+            float.style.color = '#34d399'; // Verde
+            if(navigator.vibrate) navigator.vibrate(30); // Vibrazione leggera
+        }
+        
+        document.getElementById('game-score').innerText = gameScore;
+        item.remove();
     };
-    field.appendChild(chicken); setTimeout(() => { if(chicken.parentNode) chicken.remove(); }, 900);
+    
+    field.appendChild(item); 
+    // Sparisce più velocemente
+    setTimeout(() => { if(item.parentNode) item.remove(); }, 900); 
+}
+
+// Loop di spawn (Multiplo per caos)
+function gameLoop() {
+    // 1 o 2 oggetti per tick
+    spawnGameItem();
+    if(Math.random() > 0.5) setTimeout(spawnGameItem, 200);
 }
 
 window.runWithSponsor = function(callback) {
     if (!shouldShowAd()) { if (callback) callback(); return; }
+    
     currentGameCallback = callback;
     createGameOverlay();
+    
     document.getElementById('sponsor-overlay').style.display = 'flex';
     document.getElementById('game-hud').style.display = 'flex';
     document.getElementById('game-bg-content').style.opacity = '0.4';
     document.getElementById('leaderboard-panel').style.display = 'none';
     document.getElementById('game-field').innerHTML = '';
-    gameScore = 0; document.getElementById('game-score').innerText = '0';
-    let seconds = ASSETS_CONFIG.sponsorDuration / 1000; document.getElementById('game-timer').innerText = seconds;
-    gameTimeInterval = setInterval(() => { seconds--; document.getElementById('game-timer').innerText = seconds; if (seconds <= 0) endGame(); }, 1000);
-    gameInterval = setInterval(spawnChicken, 600);
+    
+    gameScore = 0; 
+    document.getElementById('game-score').innerText = '0';
+    let seconds = ASSETS_CONFIG.sponsorDuration / 1000; 
+    document.getElementById('game-timer').innerText = seconds;
+
+    // Timer Partita
+    gameTimeInterval = setInterval(() => { 
+        seconds--; 
+        document.getElementById('game-timer').innerText = seconds; 
+        if (seconds <= 0) endGame(); 
+    }, 1000);
+    
+    // Spawn Frenetico (ogni 400ms)
+    gameInterval = setInterval(gameLoop, 400);
 };
 
 function endGame() {
-    clearInterval(gameTimeInterval); clearInterval(gameInterval);
+    clearInterval(gameTimeInterval); 
+    clearInterval(gameInterval);
     document.getElementById('game-field').innerHTML = '';
     document.getElementById('game-hud').style.display = 'none';
     document.getElementById('game-bg-content').style.opacity = '0.1';
-    const lbPanel = document.getElementById('leaderboard-panel');
-    lbPanel.style.display = 'block';
-    document.getElementById('close-lb-btn').style.display = 'none';
-    document.getElementById('new-record-input').style.display = 'none';
-    document.getElementById('score-list').innerHTML = '';
-    document.getElementById('lb-loading').style.display = 'block';
 
-    fetchLeaderboard().then(board => {
-        document.getElementById('lb-loading').style.display = 'none';
-        const minScore = (board.length < 10) ? 0 : board[board.length - 1].score;
-        if (gameScore > minScore) {
-            document.getElementById('new-record-input').style.display = 'block';
-            document.getElementById('final-score-val').innerText = gameScore;
-            const savedName = localStorage.getItem('repanza_player_name');
-            if (savedName) document.getElementById('player-name').value = savedName;
-        } else {
-            document.getElementById('close-lb-btn').style.display = 'block';
+    const lbPanel = document.getElementById('leaderboard-panel');
+    const inputDiv = document.getElementById('new-record-input');
+    const closeBtn = document.getElementById('close-lb-btn');
+    const loading = document.getElementById('lb-loading');
+    const scoreList = document.getElementById('score-list');
+
+    lbPanel.style.display = 'block';
+    inputDiv.style.display = 'none';
+    closeBtn.style.display = 'none';
+    scoreList.innerHTML = '';
+    loading.style.display = 'block';
+
+    // Recupera dati locali
+    const savedName = localStorage.getItem('repanza_player_name');
+    const savedBest = parseInt(localStorage.getItem('repanza_best_score') || 0);
+
+    // Se l'utente ha già un nome e ha battuto il suo record -> Salvataggio automatico
+    if (savedName && gameScore > savedBest) {
+        localStorage.setItem('repanza_best_score', gameScore); // Aggiorna locale
+        loading.innerText = `Nuovo Record per ${savedName}! Salvataggio...`;
+        
+        saveScoreToDB(savedName, gameScore).then(board => {
+            loading.style.display = 'none';
+            closeBtn.style.display = 'block';
             renderScores(board);
-        }
-    });
-    document.getElementById('close-lb-btn').onclick = function() {
+            showToast(`Record Aggiornato!`, false);
+        });
+    } else {
+        // Altrimenti carica classifica normale
+        fetchLeaderboard().then(board => {
+            loading.style.display = 'none';
+            const minScore = (board.length < 10) ? 0 : board[board.length - 1].score;
+            
+            // Se è un nuovo utente che entra in classifica o ha fatto record senza nome salvato
+            if (gameScore > minScore && !savedName) {
+                inputDiv.style.display = 'block';
+                document.getElementById('final-score-val').innerText = gameScore;
+            } else {
+                // Niente record o record già salvato
+                closeBtn.style.display = 'block';
+                renderScores(board);
+            }
+        });
+    }
+
+    closeBtn.onclick = function() {
         document.getElementById('sponsor-overlay').style.display = 'none';
         if (currentGameCallback) currentGameCallback();
     };
@@ -257,9 +343,12 @@ window.submitScore = function() {
     const nameInput = document.getElementById('player-name');
     const name = nameInput.value.trim() || "Anonimo";
     localStorage.setItem('repanza_player_name', name); 
+    localStorage.setItem('repanza_best_score', gameScore);
+    
     document.getElementById('new-record-input').style.display = 'none';
     document.getElementById('lb-loading').innerText = "Salvataggio...";
     document.getElementById('lb-loading').style.display = 'block';
+
     saveScoreToDB(name, gameScore).then(newBoard => {
         document.getElementById('lb-loading').style.display = 'none';
         document.getElementById('close-lb-btn').style.display = 'block';
@@ -274,6 +363,9 @@ function renderScores(board) {
 
 // --- INTRO & INIT ---
 function runIntro() {
+    // Intro SOLO SU MOBILE
+    if (!isMobileDevice()) return;
+    
     if (sessionStorage.getItem('repanza_intro_shown')) return;
     const intro = document.createElement('div');
     intro.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:200000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.8s;overflow:hidden;`;
