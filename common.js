@@ -1,8 +1,42 @@
 /* L&K Tools - Common Functions 
    Include: AI, Toast, Clipboard, Utility, Math, PWA
-   PLUS: Sponsor & Gioco Cosciotto (Mobile Only)
+   PLUS: Blocco PC con QR Code
+   PLUS: Sponsor & Gioco Cosciotto + Gattini (Versione Caos)
    PLUS: Classifica Online Intelligente
 */
+
+// --- 0. RILEVATORE DISPOSITIVO ---
+const isMobileDevice = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
+
+// --- 🛑 BLOCCO PC CON QR CODE AUTOMATICO 🛑 ---
+if (!isMobileDevice()) {
+    document.addEventListener("DOMContentLoaded", function() {
+        // Genera QR Code dell'URL corrente
+        const currentUrl = window.location.href;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&color=fbbf24&bgcolor=0f172a&data=${encodeURIComponent(currentUrl)}`;
+        
+        document.body.innerHTML = `
+            <div style="
+                position:fixed; top:0; left:0; width:100%; height:100%; 
+                background:#0f172a; color:#e2e8f0; display:flex; flex-direction:column; 
+                align-items:center; justify-content:center; z-index:999999; text-align:center;
+                font-family: system-ui, -apple-system, sans-serif; padding: 20px;
+            ">
+                <h1 style="font-size:32px; margin:0 0 10px 0; color:#fbbf24; text-transform:uppercase; letter-spacing:1px;">⛔ Solo Mobile</h1>
+                <p style="font-size:16px; color:#94a3b8; max-width:450px; line-height:1.6; margin-bottom:30px;">
+                    L'esperienza di Re Panza è progettata esclusivamente per smartphone.<br>
+                    Inquadra il QR Code qui sotto per aprire questo strumento sul tuo telefono:
+                </p>
+                <div style="padding:15px; background:#1e293b; border: 2px solid #fbbf24; border-radius: 20px; box-shadow: 0 0 40px rgba(251, 191, 36, 0.2);">
+                    <img src="${qrUrl}" style="width:250px; height:250px; display:block; border-radius:10px;">
+                </div>
+                <p style="margin-top:20px; font-size:12px; opacity:0.5;">L&K Tools - Re Panza Edition</p>
+            </div>
+        `;
+    });
+    // Blocca l'esecuzione del resto
+    throw new Error("Accesso da PC bloccato. Passare a mobile.");
+}
 
 // --- CONFIGURAZIONE ASSETS ---
 const ASSETS_CONFIG = {
@@ -19,17 +53,14 @@ const ASSETS_CONFIG = {
 
 const VIP_CODES = ['REPANZA-KING', 'CAFFE-PAGATO', 'VIP-2025'];
 
-// --- 0. RILEVATORE DISPOSITIVO ---
-const isMobileDevice = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
-
-// --- 1. UTILITY BASE ---
+// --- 1. UTILITY BASE (Non Cancellare!) ---
 function getDist(x1, y1, x2, y2) {
     let cy1 = y1, cz1 = x1 - Math.floor(y1/2), cx1 = -cy1 - cz1;
     let cy2 = y2, cz2 = x2 - Math.floor(y2/2), cx2 = -cy2 - cz2;
     return Math.max(Math.abs(cx1-cx2), Math.abs(cy1-cy2), Math.abs(cz1-cz2));
 }
 
-// --- 2. PARSING ---
+// --- 2. PARSING LINK (Non Cancellare!) ---
 function parseInputLink(url) {
     if (!url) return null;
     let mPlayer = url.match(/player\?(\d+)&(\d+)/);
@@ -40,7 +71,7 @@ function parseInputLink(url) {
 }
 function parseLKLink(url) { return parseInputLink(url); }
 
-// --- 3. HELPER HABITAT ---
+// --- 3. HELPER HABITAT (Non Cancellare!) ---
 function getHabitatInfo(t) {
     if (t === 2) return { type: 'fortezza', icon: '🏰', label: 'Fortezza' };
     if (t === 4) return { type: 'citta', icon: '🏙️', label: 'Città' };
@@ -62,7 +93,7 @@ function showToast(msg, isBad=false) {
         position:'fixed', bottom:'90px', left:'50%', transform:'translateX(-50%)',
         background: bg, color:'#000', padding:'12px 24px',
         borderRadius:'50px', fontWeight:'bold', zIndex:'10000', pointerEvents:'none',
-        transition:'0.3s', opacity:'0'
+        transition:'0.3s', opacity:'0', textAlign:'center', maxWidth:'90%'
     });
     document.body.appendChild(t);
     requestAnimationFrame(() => t.style.opacity='1');
@@ -126,7 +157,7 @@ function fallbackLeaderboard() {
 }
 
 /* =========================================
-   MINIGIOCO & SPONSOR (MOBILE ONLY)
+   MINIGIOCO CAOTICO & SPONSOR
    ========================================= */
 let gameScore = 0;
 let gameInterval = null;
@@ -134,15 +165,14 @@ let gameTimeInterval = null;
 let currentGameCallback = null;
 
 function shouldShowAd() {
-    // 1. Solo Mobile
-    if (!isMobileDevice()) return false;
-    // 2. VIP check
+    // 1. VIP check
     if (isUserVip()) return false;
-    // 3. Home check
+    // 2. Home check
     const p = window.location.pathname;
     const isHome = p.endsWith('/') || p.endsWith('index.html') || p.includes('lk_tool'); 
     if (!isHome) return false; 
-    // 4. Cooldown 5 minuti
+    
+    // 3. Cooldown 5 Minuti
     const lastAdTime = parseInt(localStorage.getItem('repanza_last_ad_time') || 0);
     if (Date.now() - lastAdTime < ASSETS_CONFIG.adCooldown) return false;
     
@@ -163,7 +193,7 @@ function createGameOverlay() {
         <div id="game-bg-content" style="text-align: center; opacity: 0.4; pointer-events: none; transform: scale(0.9); transition: opacity 0.5s;">
             <h2 style="color: #fbbf24; margin-bottom: 10px;">ATTESA...</h2>
             <img src="${ASSETS_CONFIG.sponsorImg}" style="max-height: 30vh; border-radius: 12px;">
-            <p style="color: #ccc; margin-top: 10px;">Evita i gatti 🐱!<br>Prendi i cosciotti 🍗!</p>
+            <p style="color: #ccc; margin-top: 10px;">Evita i gatti 🐱 (-1)<br>Prendi i cosciotti 🍗 (+1)</p>
         </div>
         <a href="${ASSETS_CONFIG.paypalUrl}" target="_blank" style="position: absolute; bottom: 80px; z-index: 20; padding: 12px 24px; background: #0070ba; color: #fff; text-decoration: none; font-weight: bold; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-family: sans-serif; text-transform: uppercase; font-size: 14px;">☕ Offrimi un Caffè</a>
         <div id="game-close-btn" style="position: absolute; bottom: 20px; z-index: 30; width: 50px; height: 50px; border-radius: 50%; background: #fbbf24; color: #000; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; box-shadow: 0 0 20px rgba(251,191,36,0.8); animation: pulseBtn 1s infinite;">✕</div>
@@ -190,8 +220,9 @@ function createGameOverlay() {
             .lb-row:first-child { color: #fbbf24; font-weight: bold; font-size: 1.1em; } 
             .lb-row:nth-child(2) { color: #e2e8f0; font-weight: bold; } 
             .lb-row:nth-child(3) { color: #b45309; font-weight: bold; } 
-            @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
-            .shaking { animation: shake 0.3s; border: 2px solid red; }
+            @keyframes shake { 0% { transform: translate(1px, 1px); } 10% { transform: translate(-1px, -2px); } 20% { transform: translate(-3px, 0px); } 30% { transform: translate(3px, 2px); } 40% { transform: translate(1px, -1px); } 50% { transform: translate(-1px, 2px); } 60% { transform: translate(-3px, 1px); } 70% { transform: translate(3px, 1px); } 80% { transform: translate(-1px, -1px); } 90% { transform: translate(1px, 2px); } 100% { transform: translate(1px, -2px); } }
+            .shaking { animation: shake 0.4s; border: 2px solid #ef4444; box-shadow: 0 0 20px #ef4444; }
+            @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         </style>
     `;
     document.body.appendChild(overlay);
@@ -201,15 +232,15 @@ function createGameOverlay() {
 function spawnGameItem() {
     const field = document.getElementById('game-field'); if (!field) return;
     
-    // Decidi cosa generare: 80% pollo, 20% gatto
-    const isKitten = Math.random() < 0.2;
+    // 25% possibilità che sia un gatto
+    const isKitten = Math.random() < 0.25;
     const item = document.createElement('div'); 
     item.className = 'game-item'; 
     item.innerText = isKitten ? '🐱' : '🍗';
     
     // Posizione Random
     item.style.left = (Math.random() * 80 + 10) + '%'; 
-    item.style.top = (Math.random() * 70 + 10) + '%'; // Evita troppo in basso (bottone paypal)
+    item.style.top = (Math.random() * 70 + 10) + '%'; 
 
     item.onclick = function(e) {
         e.stopPropagation();
@@ -226,15 +257,18 @@ function spawnGameItem() {
             gameScore = Math.max(0, gameScore - 1);
             float.innerText = '-1';
             float.style.color = '#ef4444'; // Rosso
-            document.getElementById('sponsor-overlay').classList.add('shaking');
-            setTimeout(() => document.getElementById('sponsor-overlay').classList.remove('shaking'), 300);
-            if(navigator.vibrate) navigator.vibrate([100, 50, 100]); // Vibrazione forte
+            
+            // Effetto Shake e Vibrazione
+            const ov = document.getElementById('sponsor-overlay');
+            ov.classList.add('shaking');
+            setTimeout(() => ov.classList.remove('shaking'), 400);
+            if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
         } else {
             // BONUS POLLO
             gameScore++;
             float.innerText = '+1';
             float.style.color = '#34d399'; // Verde
-            if(navigator.vibrate) navigator.vibrate(30); // Vibrazione leggera
+            if(navigator.vibrate) navigator.vibrate(20); 
         }
         
         document.getElementById('game-score').innerText = gameScore;
@@ -242,15 +276,15 @@ function spawnGameItem() {
     };
     
     field.appendChild(item); 
-    // Sparisce più velocemente
+    // Sparisce velocemente
     setTimeout(() => { if(item.parentNode) item.remove(); }, 900); 
 }
 
-// Loop di spawn (Multiplo per caos)
+// Loop di spawn caotico
 function gameLoop() {
-    // 1 o 2 oggetti per tick
     spawnGameItem();
-    if(Math.random() > 0.5) setTimeout(spawnGameItem, 200);
+    // 60% chance di doppio spawn
+    if(Math.random() > 0.4) setTimeout(spawnGameItem, 250);
 }
 
 window.runWithSponsor = function(callback) {
@@ -277,8 +311,8 @@ window.runWithSponsor = function(callback) {
         if (seconds <= 0) endGame(); 
     }, 1000);
     
-    // Spawn Frenetico (ogni 400ms)
-    gameInterval = setInterval(gameLoop, 400);
+    // Spawn Frenetico
+    gameInterval = setInterval(gameLoop, 450);
 };
 
 function endGame() {
@@ -306,8 +340,8 @@ function endGame() {
 
     // Se l'utente ha già un nome e ha battuto il suo record -> Salvataggio automatico
     if (savedName && gameScore > savedBest) {
-        localStorage.setItem('repanza_best_score', gameScore); // Aggiorna locale
-        loading.innerText = `Nuovo Record per ${savedName}! Salvataggio...`;
+        localStorage.setItem('repanza_best_score', gameScore); 
+        loading.innerText = `Nuovo Record! Salvataggio...`;
         
         saveScoreToDB(savedName, gameScore).then(board => {
             loading.style.display = 'none';
@@ -321,12 +355,12 @@ function endGame() {
             loading.style.display = 'none';
             const minScore = (board.length < 10) ? 0 : board[board.length - 1].score;
             
-            // Se è un nuovo utente che entra in classifica o ha fatto record senza nome salvato
+            // Se è un nuovo utente che entra in classifica
             if (gameScore > minScore && !savedName) {
                 inputDiv.style.display = 'block';
                 document.getElementById('final-score-val').innerText = gameScore;
             } else {
-                // Niente record o record già salvato
+                // Niente record o punteggio basso
                 closeBtn.style.display = 'block';
                 renderScores(board);
             }
