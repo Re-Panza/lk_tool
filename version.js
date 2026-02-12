@@ -1,5 +1,6 @@
-const APP_VERSION = '12.3';
-const APP_NEWS = 'aggiunto mondo italia V regioni';
+const APP_VERSION = '12.4';
+const APP_NEWS = 'La taverna è ONLINE';
+
 
 
 
