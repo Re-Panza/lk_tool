@@ -1,7 +1,7 @@
 /* L&K Tools - Common Functions 
    Include: AI, Toast, Utility, PWA
    PLUS: Blocco PC con QR Code (Bypass: ?dev=true)
-   PLUS: Intro "Caricamento" con Cosciotto & Sponsor Clean
+   PLUS: Intro Fullscreen con Cosciotto & Sponsor Clean
 */
 
 // --- CONFIGURAZIONE ASSETS ---
@@ -10,7 +10,7 @@ const ASSETS_CONFIG = {
     introImg: 'https://re-panza.github.io/lk_tool/re%20panza%20intro.png',
     paypalUrl: 'https://paypal.me/Longo11',
     sponsorDuration: 10000, // 10 secondi di attesa
-    introDuration: 4000,    // 4 secondi intro (più rapida)
+    introDuration: 4000,    // 4 secondi intro
     adCooldown: 300000      // 5 MINUTI
 };
 
@@ -84,7 +84,6 @@ function createSponsorOverlay() {
                 max-height: 65vh; 
                 object-fit: contain; 
                 border-radius: 8px;
-                /* Nessun bordo, nessuna ombra colorata */
             ">
         </div>
 
@@ -141,7 +140,7 @@ window.runWithSponsor = function(callback) {
     };
 };
 
-// --- INTRO CARICAMENTO (Cosciotto Sincronizzato) ---
+// --- INTRO CARICAMENTO (Cosciotto Sincronizzato & Fullscreen Img) ---
 function runIntro() {
     if (sessionStorage.getItem('repanza_intro_shown')) return;
     
@@ -149,12 +148,11 @@ function runIntro() {
     intro.id = 'repanza-intro';
     intro.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:200000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s;`;
     
-    // Calcolo durata transizione CSS
-    const animDuration = ASSETS_CONFIG.introDuration / 1000; // in secondi
+    const animDuration = ASSETS_CONFIG.introDuration / 1000;
 
     intro.innerHTML = `
-        <div style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1; display:flex; align-items:center; justify-content:center;">
-            <img src="${ASSETS_CONFIG.introImg}" style="width:100%; height:100%; object-fit: contain; opacity:0.8;">
+        <div style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;">
+            <img src="${ASSETS_CONFIG.introImg}" style="width:100%; height:100%; object-fit: cover; opacity:0.8;">
         </div>
         
         <div style="position:absolute; bottom:60px; left:50%; transform:translateX(-50%); width:80%; max-width:350px; z-index:10; text-align:center;">
