@@ -1,7 +1,7 @@
 /* L&K Tools - Common Functions 
    Include: AI, Toast, Utility, PWA
    PLUS: Blocco PC con QR Code (Bypass: ?dev=true)
-   PLUS: Intro Fullscreen con Cosciotto & Sponsor Clean
+   PLUS: Intro Fullscreen, Sponsor Clean & Copyright Footer
 */
 
 // --- CONFIGURAZIONE ASSETS ---
@@ -54,6 +54,28 @@ function showToast(msg) {
 
 function isUserVip() { return localStorage.getItem('repanza_is_vip') === 'true'; }
 
+// --- LOGICA FOOTER COPYRIGHT ---
+function addCopyrightFooter() {
+    const footer = document.createElement('footer');
+    footer.style.cssText = `
+        width: 100%;
+        padding: 20px 0;
+        background: #0f172a;
+        color: #64748b;
+        text-align: center;
+        font-family: sans-serif;
+        font-size: 12px;
+        margin-top: 40px;
+        border-top: 1px solid #1e293b;
+    `;
+    const year = new Date().getFullYear();
+    footer.innerHTML = `
+        <div style="margin-bottom: 5px;">&copy; ${year} <strong>L&K Tools</strong></div>
+        <div>Tutti i diritti riservati - Re Panza</div>
+    `;
+    document.body.appendChild(footer);
+}
+
 // --- LOGICA SPONSOR (STATICO & CLEAN) ---
 let currentGameCallback = null;
 let sponsorInterval = null;
@@ -70,7 +92,6 @@ function createSponsorOverlay() {
     if (document.getElementById('sponsor-overlay')) return;
     const overlay = document.createElement('div');
     overlay.id = 'sponsor-overlay';
-    // Overlay scuro ma leggermente trasparente per profondità
     overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 10, 0.99); z-index: 100000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-family: sans-serif;`;
     
     overlay.innerHTML = `
@@ -140,7 +161,7 @@ window.runWithSponsor = function(callback) {
     };
 };
 
-// --- INTRO CARICAMENTO (Cosciotto Sincronizzato & Fullscreen Img) ---
+// --- INTRO CARICAMENTO (Fullscreen & Animata) ---
 function runIntro() {
     if (sessionStorage.getItem('repanza_intro_shown')) return;
     
@@ -179,7 +200,6 @@ function runIntro() {
     `;
     document.body.appendChild(intro);
     
-    // Start Animazione
     requestAnimationFrame(() => {
         setTimeout(() => { 
             if(document.getElementById('intro-bar')) {
@@ -189,7 +209,6 @@ function runIntro() {
         }, 100);
     });
 
-    // Chiusura
     setTimeout(() => {
         intro.style.opacity = '0';
         setTimeout(() => { 
@@ -204,7 +223,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Avvia Intro
     runIntro();
 
-    // 2. Intercetta click sui link
+    // 2. Aggiungi Footer Copyright
+    addCopyrightFooter();
+
+    // 3. Intercetta click sui link
     document.querySelectorAll('a').forEach(link => {
         const href = link.getAttribute('href');
         if (!href || href.startsWith('#') || href.includes('javascript') || href.includes('paypal') || link.target === '_blank') return;
@@ -215,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 3. Intercetta click su Game Cards
+    // 4. Intercetta click su Game Cards
     const gameCards = document.querySelectorAll('.game-card');
     gameCards.forEach(card => {
         const originalClick = card.getAttribute('onclick');
