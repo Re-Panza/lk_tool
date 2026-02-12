@@ -1,7 +1,7 @@
 /* L&K Tools - Common Functions 
    Include: AI, Toast, Utility, PWA
    PLUS: Blocco PC con QR Code (Bypass: ?dev=true)
-   PLUS: Intro Animata & Sponsor Statico (No Minigioco)
+   PLUS: Intro "Caricamento" con Cosciotto & Sponsor Clean
 */
 
 // --- CONFIGURAZIONE ASSETS ---
@@ -10,7 +10,7 @@ const ASSETS_CONFIG = {
     introImg: 'https://re-panza.github.io/lk_tool/re%20panza%20intro.png',
     paypalUrl: 'https://paypal.me/Longo11',
     sponsorDuration: 10000, // 10 secondi di attesa
-    introDuration: 5000,    // 5 secondi intro
+    introDuration: 4000,    // 4 secondi intro (più rapida)
     adCooldown: 300000      // 5 MINUTI
 };
 
@@ -54,7 +54,7 @@ function showToast(msg) {
 
 function isUserVip() { return localStorage.getItem('repanza_is_vip') === 'true'; }
 
-// --- LOGICA SPONSOR (STATICO) ---
+// --- LOGICA SPONSOR (STATICO & CLEAN) ---
 let currentGameCallback = null;
 let sponsorInterval = null;
 
@@ -70,31 +70,39 @@ function createSponsorOverlay() {
     if (document.getElementById('sponsor-overlay')) return;
     const overlay = document.createElement('div');
     overlay.id = 'sponsor-overlay';
-    overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); z-index: 100000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-family: sans-serif;`;
+    // Overlay scuro ma leggermente trasparente per profondità
+    overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 10, 0.99); z-index: 100000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-family: sans-serif;`;
+    
     overlay.innerHTML = `
-        <div style="font-size: 20px; color: #fbbf24; margin-bottom: 20px; font-weight: bold;">
+        <div style="font-size: 20px; color: #fbbf24; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px;">
             ⏳ Attendi: <span id="sponsor-timer">10</span>s
         </div>
         
-        <div style="position: relative; margin-bottom: 30px;">
-            <img src="${ASSETS_CONFIG.sponsorImg}" style="max-width: 85%; max-height: 50vh; border-radius: 15px; border: 3px solid #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.2);">
+        <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 25px;">
+            <img src="${ASSETS_CONFIG.sponsorImg}" style="
+                max-width: 95%; 
+                max-height: 65vh; 
+                object-fit: contain; 
+                border-radius: 8px;
+                /* Nessun bordo, nessuna ombra colorata */
+            ">
         </div>
 
         <a href="${ASSETS_CONFIG.paypalUrl}" target="_blank" style="
-            padding: 15px 30px; background: #0070ba; color: #fff; text-decoration: none; 
+            padding: 14px 35px; background: #0070ba; color: #fff; text-decoration: none; 
             border-radius: 50px; font-weight: bold; font-size: 16px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px;
+            transform: scale(1); transition: transform 0.2s;
         ">
             ☕ Offrimi un Caffè
         </a>
 
         <div id="sponsor-close-btn" style="
-            margin-top: 40px; width: 60px; height: 60px; border-radius: 50%; 
-            background: #34d399; color: #0f172a; display: none; align-items: center; 
-            justify-content: center; font-size: 28px; cursor: pointer; font-weight: bold;
-            box-shadow: 0 0 20px rgba(52, 211, 153, 0.6); animation: pulse 1.5s infinite;
+            margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; 
+            background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #fff;
+            display: none; align-items: center; justify-content: center; 
+            font-size: 24px; cursor: pointer; font-weight: lighter;
         ">✕</div>
-        <style>@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }</style>
     `;
     document.body.appendChild(overlay);
 }
@@ -133,45 +141,63 @@ window.runWithSponsor = function(callback) {
     };
 };
 
-// --- INTRO RE PANZA (CARICAMENTO) ---
+// --- INTRO CARICAMENTO (Cosciotto Sincronizzato) ---
 function runIntro() {
     if (sessionStorage.getItem('repanza_intro_shown')) return;
     
     const intro = document.createElement('div');
     intro.id = 'repanza-intro';
-    intro.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:200000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.8s;`;
+    intro.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:200000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s;`;
     
+    // Calcolo durata transizione CSS
+    const animDuration = ASSETS_CONFIG.introDuration / 1000; // in secondi
+
     intro.innerHTML = `
-        <div style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;">
-            <img src="${ASSETS_CONFIG.introImg}" style="width:100%;height:100%;object-fit:cover;opacity:0.8;">
+        <div style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1; display:flex; align-items:center; justify-content:center;">
+            <img src="${ASSETS_CONFIG.introImg}" style="width:100%; height:100%; object-fit: contain; opacity:0.8;">
         </div>
-        <div style="position:absolute;bottom:50px;left:10%;width:80%;z-index:10;text-align:center;">
-            <div style="color:#fbbf24;font-family:monospace;font-size:18px;margin-bottom:15px;font-weight:bold;text-shadow: 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 2px;">
-                CARICAMENTO RE PANZA...
+        
+        <div style="position:absolute; bottom:60px; left:50%; transform:translateX(-50%); width:80%; max-width:350px; z-index:10; text-align:center;">
+            <div style="color:#fbbf24; font-family: sans-serif; font-size:16px; margin-bottom:20px; font-weight:bold; letter-spacing: 3px; text-transform: uppercase;">
+                CARICAMENTO...
             </div>
-            <div style="width:100%;height:12px;background:rgba(255,255,255,0.2);border-radius:6px;position:relative;border:1px solid rgba(255,255,255,0.3);">
-                <div id="intro-bar" style="width:0%;height:100%;background:#fbbf24;border-radius:6px;transition:width 4.5s linear; box-shadow: 0 0 15px #fbbf24;"></div>
-                <div id="intro-chicken" style="position:absolute;top:-35px;left:0%;font-size:32px;transition:left 4.5s linear; transform: translateX(-50%); filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));">🍗</div>
+            
+            <div style="width:100%; height:8px; background:rgba(255,255,255,0.2); border-radius:10px; position:relative; overflow: visible;">
+                <div id="intro-bar" style="
+                    width:0%; height:100%; background:#fbbf24; border-radius:10px; 
+                    transition: width ${animDuration}s linear;
+                    box-shadow: 0 0 10px #fbbf24;
+                "></div>
+                
+                <div id="intro-chicken" style="
+                    position: absolute; top: -35px; left: 0%; 
+                    font-size: 32px; 
+                    transform: translateX(-50%) rotate(20deg); 
+                    transition: left ${animDuration}s linear;
+                    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
+                ">🍗</div>
             </div>
         </div>
     `;
     document.body.appendChild(intro);
     
-    // Animazione barra
-    setTimeout(() => { 
-        if(document.getElementById('intro-bar')) {
-            document.getElementById('intro-bar').style.width = '100%'; 
-            document.getElementById('intro-chicken').style.left = '100%';
-        }
-    }, 100);
+    // Start Animazione
+    requestAnimationFrame(() => {
+        setTimeout(() => { 
+            if(document.getElementById('intro-bar')) {
+                document.getElementById('intro-bar').style.width = '100%'; 
+                document.getElementById('intro-chicken').style.left = '100%';
+            }
+        }, 100);
+    });
 
-    // Rimozione
+    // Chiusura
     setTimeout(() => {
         intro.style.opacity = '0';
         setTimeout(() => { 
             intro.remove(); 
             sessionStorage.setItem('repanza_intro_shown', 'true'); 
-        }, 800);
+        }, 500);
     }, ASSETS_CONFIG.introDuration);
 }
 
@@ -191,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 3. Intercetta click su Game Cards (se presenti)
+    // 3. Intercetta click su Game Cards
     const gameCards = document.querySelectorAll('.game-card');
     gameCards.forEach(card => {
         const originalClick = card.getAttribute('onclick');
@@ -202,10 +228,4 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
-
-    // 4. Controllo automatico navigazione (opzionale: se l'utente sta fermo troppo a lungo)
-    setInterval(() => {
-        // Se vuoi che la pubblicità appaia anche stando fermi, togli il commento sotto:
-        // if (shouldShowAd()) window.runWithSponsor();
-    }, 30000);
 });
