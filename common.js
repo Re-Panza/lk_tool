@@ -267,23 +267,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
 // --- 5. UTILITY COMUNI (Coordinate, Distanze, Habitat) ---
 function parseLK(link) {
     if (!link) return null;
-    const url = link.split(' ')[0];
-    if (url.includes('coordinates?')) {
-        const parts = url.split('?')[1].split('&');
-        const coords = parts[0].split(',');
-        return { x: parseInt(coords[0]), y: parseInt(coords[1]), w: parts[1] || null };
+    
+    // Cerca il pattern delle coordinate ignorando tutto il testo prima o dopo
+    let coordMatch = link.match(/coordinates\?(\d+),(\d+)&(\d+)/);
+    if (coordMatch) {
+        return { x: parseInt(coordMatch[1]), y: parseInt(coordMatch[2]), w: coordMatch[3] };
     }
-    if (url.includes('player?')) {
-        const parts = url.split('?')[1].split('&');
-        return { p: parts[0], w: parts[1] || null };
+    
+    // Cerca pattern player ignorando testo extra
+    let playerMatch = link.match(/player\?([^&]+)&(\d+)/);
+    if (playerMatch) {
+        return { p: playerMatch[1], w: playerMatch[2] };
     }
-    if (url.includes('alliance?')) {
-        const parts = url.split('?')[1].split('&');
-        return { a: parts[0], w: parts[1] || null };
+    
+    // Cerca pattern alliance ignorando testo extra
+    let allyMatch = link.match(/alliance\?([^&]+)&(\d+)/);
+    if (allyMatch) {
+        return { a: allyMatch[1], w: allyMatch[2] };
     }
+    
     return null;
 }
 
