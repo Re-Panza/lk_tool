@@ -294,14 +294,21 @@ function parseLK(link) {
 }
 
 function getDist(x1, y1, x2, y2) {
-    // Converte le coordinate mappa sfalsate in coordinate assiali per esagoni (Logica L&K)
-    let q1 = x1;
-    let r1 = y1 - Math.floor(x1 / 2);
-    let q2 = x2;
-    let r2 = y2 - Math.floor(x2 / 2);
+    // Calcolo esatto su Asse Cartesiano per mappa Esagonale L&K ("a muro")
+    // Le righe dispari (1, 3, 5...) sono spostate a destra di mezzo esagono (0.5).
+    // L'altezza tra le righe di esagoni regolari corrisponde a √3 / 2 (~0.866025)
     
-    // Calcola la distanza esatta sui lati degli esagoni
-    return Math.max(Math.abs(q1 - q2), Math.abs(r1 - r2), Math.abs(-q1 - r1 - (-q2 - r2)));
+    let cx1 = x1 + (Math.abs(y1 % 2) === 1 ? 0.5 : 0);
+    let cy1 = y1 * 0.8660254037844386;
+    
+    let cx2 = x2 + (Math.abs(y2 % 2) === 1 ? 0.5 : 0);
+    let cy2 = y2 * 0.8660254037844386;
+    
+    // Teorema di Pitagora calcolato sui centri effettivi degli esagoni
+    let dist = Math.sqrt(Math.pow(cx2 - cx1, 2) + Math.pow(cy2 - cy1, 2));
+    
+    // Arrotondamento classico: fino a 0.4 arrotonda per difetto, da 0.5 in poi per eccesso.
+    return Math.round(dist);
 }
 
 function getHabitatInfo(t) {
