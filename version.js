@@ -1,5 +1,6 @@
-const APP_VERSION = '12.5';
+const APP_VERSION = '12.6';
 const APP_NEWS = 'La taverna è ONLINE';
+
 
 
 
