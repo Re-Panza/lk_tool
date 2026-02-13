@@ -294,7 +294,14 @@ function parseLK(link) {
 }
 
 function getDist(x1, y1, x2, y2) {
-    return Math.round(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)));
+    // Converte le coordinate mappa sfalsate in coordinate assiali per esagoni (Logica L&K)
+    let q1 = x1;
+    let r1 = y1 - Math.floor(x1 / 2);
+    let q2 = x2;
+    let r2 = y2 - Math.floor(x2 / 2);
+    
+    // Calcola la distanza esatta sui lati degli esagoni
+    return Math.max(Math.abs(q1 - q2), Math.abs(r1 - r2), Math.abs(-q1 - r1 - (-q2 - r2)));
 }
 
 function getHabitatInfo(t) {
